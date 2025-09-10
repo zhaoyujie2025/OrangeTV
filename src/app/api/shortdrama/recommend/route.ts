@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { API_CONFIG } from '@/lib/config';
 
-// 强制动态渲染
-export const dynamic = 'force-dynamic';
-
 // 转换外部API数据格式到内部格式 - 推荐API通常和分类热搜格式相同
 function transformExternalData(externalItem: any) {
   return {

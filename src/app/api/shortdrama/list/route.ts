@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { API_CONFIG } from '@/lib/config';
 
-// 强制动态渲染
-export const dynamic = 'force-dynamic';
-
 // 转换外部API数据格式到内部格式 - 分类热搜API直接使用id作为视频ID
 function transformExternalData(externalItem: any) {
   return {

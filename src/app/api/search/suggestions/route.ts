@@ -9,8 +9,6 @@ import { searchFromApi } from '@/lib/downstream';
 import { yellowWords } from '@/lib/yellow';
 
 export const runtime = 'nodejs';
-// 强制动态渲染
-export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
