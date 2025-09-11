@@ -72,7 +72,7 @@
 ```yml
 services:
   OrangeTV-core:
-    image: ghcr.io/djteang/orangetv:2.0
+    image: ghcr.io/djteang/orangetv:latest
     container_name: OrangeTV-core
     restart: on-failure
     ports:
@@ -106,7 +106,7 @@ volumes:
 ```yml
 services:
   OrangeTV-core:
-    image: ghcr.io/djteang/orangetv:2.0
+    image: ghcr.io/djteang/orangetv:latest
     container_name: OrangeTV-core
     restart: on-failure
     ports:
@@ -142,7 +142,7 @@ networks:
 ```yml
 services:
   OrangeTV-core:
-    image: ghcr.io/djteang/orangetv:2.0
+    image: ghcr.io/djteang/orangetv:latest
     container_name: OrangeTV-core
     restart: on-failure
     ports:
