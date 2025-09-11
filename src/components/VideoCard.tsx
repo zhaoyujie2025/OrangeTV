@@ -131,9 +131,9 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     ? (actualEpisodes && actualEpisodes === 1 ? 'movie' : 'tv')
     : type;
 
-  // 获取收藏状态（搜索结果页面不检查）
+  // 获取收藏状态（搜索结果、豆瓣和短剧页面不检查）
   useEffect(() => {
-    if (from === 'douban' || from === 'search' || !actualSource || !actualId) return;
+    if (from === 'douban' || from === 'search' || from === 'shortdrama' || !actualSource || !actualId) return;
 
     const fetchFavoriteStatus = async () => {
       try {
@@ -164,7 +164,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      if (from === 'douban' || !actualSource || !actualId) return;
+      if (from === 'douban' || from === 'shortdrama' || !actualSource || !actualId) return;
 
       try {
         // 确定当前收藏状态
@@ -375,7 +375,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         showSourceName: true,
         showProgress: false,
         showPlayButton: true,
-        showHeart: true,
+        showHeart: false, // 短剧不显示收藏功能
         showCheckCircle: false,
         showDoubanLink: false,
         showRating: !!rate,
@@ -412,7 +412,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     // 聚合源信息 - 直接在菜单中展示，不需要单独的操作项
 
     // 收藏/取消收藏操作
-    if (config.showHeart && from !== 'douban' && actualSource && actualId) {
+    if (config.showHeart && from !== 'douban' && from !== 'shortdrama' && actualSource && actualId) {
       const currentFavorited = from === 'search' ? searchFavorited : favorited;
 
       if (from === 'search') {
@@ -680,7 +680,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
                   }}
                 />
               )}
-              {config.showHeart && from !== 'search' && (
+              {config.showHeart && from !== 'search' && from !== 'shortdrama' && (
                 <Heart
                   onClick={handleToggleFavorite}
                   size={20}
