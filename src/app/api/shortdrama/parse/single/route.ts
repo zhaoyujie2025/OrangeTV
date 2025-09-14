@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
     const apiUrl = new URL(`${API_CONFIG.shortdrama.baseUrl}/vod/parse/single`);
     apiUrl.searchParams.append('id', id);
     if (episode) apiUrl.searchParams.append('episode', episode);
+    apiUrl.searchParams.append('proxy', 'true');
 
     const response = await fetch(apiUrl.toString(), {
       method: 'GET',

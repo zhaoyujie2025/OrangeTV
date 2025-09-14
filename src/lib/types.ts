@@ -123,3 +123,54 @@ export interface SkipConfig {
   intro_time: number; // 片头时间（秒）
   outro_time: number; // 片尾时间（秒）
 }
+
+// 聊天消息数据结构
+export interface ChatMessage {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  sender_name: string;
+  content: string;
+  message_type: 'text' | 'image' | 'file';
+  timestamp: number;
+  is_read: boolean;
+}
+
+// 对话数据结构
+export interface Conversation {
+  id: string;
+  name: string;
+  participants: string[];
+  type: 'private' | 'group';
+  created_at: number;
+  updated_at: number;
+  last_message?: ChatMessage;
+  is_group?: boolean;
+}
+
+// 好友数据结构
+export interface Friend {
+  id: string;
+  username: string;
+  nickname?: string;
+  status: 'online' | 'offline';
+  added_at: number;
+}
+
+// 好友申请数据结构
+export interface FriendRequest {
+  id: string;
+  from_user: string;
+  to_user: string;
+  message?: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: number;
+  updated_at: number;
+}
+
+// WebSocket 消息类型
+export interface WebSocketMessage {
+  type: 'message' | 'friend_request' | 'friend_accepted' | 'user_status' | 'online_users' | 'connection_confirmed' | 'user_connect' | 'ping' | 'pong';
+  data?: any;
+  timestamp: number;
+}

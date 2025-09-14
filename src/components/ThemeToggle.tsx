@@ -2,15 +2,43 @@
 
 'use client';
 
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, MessageCircle } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { ChatModal } from './ChatModal';
+import { useWebSocket } from '../hooks/useWebSocket';
+import { WebSocketMessage } from '../lib/types';
 
 export function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+  const [messageCount, setMessageCount] = useState(0);
+  const [chatCount, setChatCount] = useState(0);
+  const [friendRequestCount, setFriendRequestCount] = useState(0);
   const { setTheme, resolvedTheme } = useTheme();
   const pathname = usePathname();
+
+  // 不再在ThemeToggle中创建独立的WebSocket连接
+  // 改为依赖ChatModal传递的消息计数
+
+  // 直接使用ChatModal传来的消息计数
+  const handleMessageCountFromModal = useCallback((totalCount: number) => {
+    console.log('📊 [ThemeToggle] 收到ChatModal传来的消息计数:', totalCount);
+    setMessageCount(totalCount);
+  }, []);
+
+  // 处理聊天消息计数重置（当用户查看对话时）
+  const handleChatCountReset = useCallback((resetCount: number) => {
+    console.log('💬 [ThemeToggle] 重置聊天计数:', resetCount);
+    // 这些回调函数现在主要用于同步状态，实际计数由ChatModal管理
+  }, []);
+
+  // 处理好友请求计数重置（当用户查看好友请求时）
+  const handleFriendRequestCountReset = useCallback((resetCount: number) => {
+    console.log('👥 [ThemeToggle] 重置好友请求计数:', resetCount);
+    // 这些回调函数现在主要用于同步状态，实际计数由ChatModal管理
+  }, []);
 
   const setThemeColor = (theme?: string) => {
     const meta = document.querySelector('meta[name="theme-color"]');
@@ -55,16 +83,44 @@ export function ThemeToggle() {
   };
 
   return (
-    <button
-      onClick={toggleTheme}
-      className='w-10 h-10 p-2 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200/50 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-colors'
-      aria-label='Toggle theme'
-    >
-      {resolvedTheme === 'dark' ? (
-        <Sun className='w-full h-full' />
-      ) : (
-        <Moon className='w-full h-full' />
-      )}
-    </button>
+    <>
+      <div className="flex items-center space-x-2">
+        {/* 聊天按钮 */}
+        <button
+          onClick={() => setIsChatModalOpen(true)}
+          className='w-10 h-10 p-2 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200/50 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-colors relative'
+          aria-label='Open chat'
+        >
+          <MessageCircle className='w-full h-full' />
+          {messageCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+              {messageCount > 99 ? '99+' : messageCount}
+            </span>
+          )}
+        </button>
+
+        {/* 主题切换按钮 */}
+        <button
+          onClick={toggleTheme}
+          className='w-10 h-10 p-2 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200/50 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-colors'
+          aria-label='Toggle theme'
+        >
+          {resolvedTheme === 'dark' ? (
+            <Sun className='w-full h-full' />
+          ) : (
+            <Moon className='w-full h-full' />
+          )}
+        </button>
+      </div>
+
+      {/* 聊天模态框 */}
+      <ChatModal
+        isOpen={isChatModalOpen}
+        onClose={() => setIsChatModalOpen(false)}
+        onMessageCountChange={handleMessageCountFromModal}
+        onChatCountReset={handleChatCountReset}
+        onFriendRequestCountReset={handleFriendRequestCountReset}
+      />
+    </>
   );
 }

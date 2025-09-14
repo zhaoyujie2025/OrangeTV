@@ -433,6 +433,10 @@ function SearchPageClient() {
         clearTimeout(flushTimerRef.current);
         flushTimerRef.current = null;
       }
+
+      // 清理聚合统计缓存和refs，防止数据污染
+      groupStatsRef.current.clear();
+      groupRefs.current.clear();
       setIsLoading(true);
       setShowResults(true);
 
@@ -464,7 +468,11 @@ function SearchPageClient() {
           if (!event.data) return;
           try {
             const payload = JSON.parse(event.data);
-            if (currentQueryRef.current !== trimmed) return;
+            // 强化竞态条件检查：确保是当前查询的响应
+            if (currentQueryRef.current !== trimmed || eventSourceRef.current !== es) {
+              console.warn('忽略过期的搜索响应:', payload.type, '当前查询:', currentQueryRef.current, '响应查询:', trimmed);
+              return;
+            }
             switch (payload.type) {
               case 'start':
                 setTotalSources(payload.totalSources || 0);
@@ -544,7 +552,11 @@ function SearchPageClient() {
         fetch(`/api/search?q=${encodeURIComponent(trimmed)}`)
           .then(response => response.json())
           .then(data => {
-            if (currentQueryRef.current !== trimmed) return;
+            // 强化竞态条件检查：确保是当前查询的响应
+            if (currentQueryRef.current !== trimmed) {
+              console.warn('忽略过期的搜索响应 (传统):', '当前查询:', currentQueryRef.current, '响应查询:', trimmed);
+              return;
+            }
 
             if (data.results && Array.isArray(data.results)) {
               const activeYearOrder = (viewMode === 'agg' ? (filterAgg.yearOrder) : (filterAll.yearOrder));
@@ -573,7 +585,7 @@ function SearchPageClient() {
     }
   }, [searchParams]);
 
-  // 组件卸载时，关闭可能存在的连接
+  // 组件卸载时，关闭可能存在的连接并清理所有状态
   useEffect(() => {
     return () => {
       if (eventSourceRef.current) {
@@ -585,6 +597,11 @@ function SearchPageClient() {
         flushTimerRef.current = null;
       }
       pendingResultsRef.current = [];
+      // 清理聚合统计缓存和refs，防止状态泄露
+      groupStatsRef.current.clear();
+      groupRefs.current.clear();
+      // 重置当前查询引用
+      currentQueryRef.current = '';
     };
   }, []);
 
@@ -613,6 +630,12 @@ function SearchPageClient() {
     const trimmed = searchQuery.trim().replace(/\s+/g, ' ');
     if (!trimmed) return;
 
+    // 清理所有状态和缓存，确保搜索结果干净
+    setSearchResults([]);
+    pendingResultsRef.current = [];
+    groupStatsRef.current.clear();
+    groupRefs.current.clear();
+
     // 回显搜索框
     setSearchQuery(trimmed);
     setIsLoading(true);
@@ -624,6 +647,12 @@ function SearchPageClient() {
   };
 
   const handleSuggestionSelect = (suggestion: string) => {
+    // 清理所有状态和缓存，确保搜索结果干净
+    setSearchResults([]);
+    pendingResultsRef.current = [];
+    groupStatsRef.current.clear();
+    groupRefs.current.clear();
+
     setSearchQuery(suggestion);
     setShowSuggestions(false);
 
@@ -694,6 +723,12 @@ function SearchPageClient() {
                   // 当用户按回车键时，使用搜索框的实际内容进行搜索
                   const trimmed = searchQuery.trim().replace(/\s+/g, ' ');
                   if (!trimmed) return;
+
+                  // 清理所有状态和缓存，确保搜索结果干净
+                  setSearchResults([]);
+                  pendingResultsRef.current = [];
+                  groupStatsRef.current.clear();
+                  groupRefs.current.clear();
 
                   // 回显搜索框
                   setSearchQuery(trimmed);
@@ -858,6 +893,12 @@ function SearchPageClient() {
                   <div key={item} className='relative group'>
                     <button
                       onClick={() => {
+                        // 清理所有状态和缓存，确保搜索结果干净
+                        setSearchResults([]);
+                        pendingResultsRef.current = [];
+                        groupStatsRef.current.clear();
+                        groupRefs.current.clear();
+
                         setSearchQuery(item);
                         router.push(
                           `/search?q=${encodeURIComponent(item.trim())}`

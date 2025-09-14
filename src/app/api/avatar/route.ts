@@ -16,14 +16,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const targetUser = searchParams.get('user') || authInfo.username;
 
-    // 只允许获取自己的头像，管理员和站长可以获取任何用户的头像
-    const canAccess = targetUser === authInfo.username ||
-      authInfo.role === 'admin' ||
-      authInfo.role === 'owner';
-
-    if (!canAccess) {
-      return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
-    }
+    // 在聊天系统中，用户应该能够查看其他用户的头像，这对聊天功能是必要的
+    // 只要是已认证用户，就可以查看任何用户的头像
+    // 这对于聊天、好友功能等社交功能是必要的
 
     const avatar = await db.getUserAvatar(targetUser);
 

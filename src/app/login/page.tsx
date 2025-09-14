@@ -262,17 +262,22 @@ function LoginPageClient() {
 
               {/* 绑定选项 */}
               {!requireMachineCode && (
-                <div className='flex items-center space-x-3'>
-                  <input
-                    id='bindMachineCode'
-                    type='checkbox'
-                    checked={bindMachineCode}
-                    onChange={(e) => setBindMachineCode(e.target.checked)}
-                    className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
-                  />
-                  <label htmlFor='bindMachineCode' className='text-sm text-gray-700 dark:text-gray-300'>
-                    绑定此设备（提升账户安全性）
-                  </label>
+                <div className='space-y-2'>
+                  <div className='flex items-center space-x-3'>
+                    <input
+                      id='bindMachineCode'
+                      type='checkbox'
+                      checked={bindMachineCode}
+                      onChange={(e) => setBindMachineCode(e.target.checked)}
+                      className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
+                    />
+                    <label htmlFor='bindMachineCode' className='text-sm text-gray-700 dark:text-gray-300'>
+                      绑定此设备（提升账户安全性）
+                    </label>
+                  </div>
+                  {/* <p className='text-xs text-gray-500 dark:text-gray-400 ml-7'>
+                    // 管理员可选择不绑定机器码直接登录
+                  </p> */}
                 </div>
               )}
             </div>

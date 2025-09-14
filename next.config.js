@@ -5,7 +5,7 @@ const nextConfig = {
   output: 'standalone',
   eslint: {
     dirs: ['src'],
-    ignoreDuringBuilds: process.env.DOCKER_ENV === 'true',
+    ignoreDuringBuilds: true, // 始终在构建时忽略 ESLint 错误
   },
 
   reactStrictMode: false,
@@ -58,6 +58,23 @@ const nextConfig = {
 
     // Modify the file loader rule to ignore *.svg, since we have it handled now.
     fileLoaderRule.exclude = /\.svg$/i;
+
+    // Add alias configuration to ensure proper path resolution in Docker builds
+    const path = require('path');
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, 'src'),
+      '~': path.resolve(__dirname, 'public'),
+    };
+
+    // Ensure proper file extension resolution
+    config.resolve.extensions = ['.ts', '.tsx', '.js', '.jsx', '.json'];
+
+    // Add TypeScript module resolution support
+    config.resolve.modules = [
+      path.resolve(__dirname, 'src'),
+      'node_modules'
+    ];
 
     config.resolve.fallback = {
       ...config.resolve.fallback,

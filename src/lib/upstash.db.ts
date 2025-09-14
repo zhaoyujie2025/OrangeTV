@@ -3,7 +3,7 @@
 import { Redis } from '@upstash/redis';
 
 import { AdminConfig } from './admin.types';
-import { Favorite, IStorage, PlayRecord, SkipConfig } from './types';
+import { Favorite, IStorage, PlayRecord, SkipConfig, ChatMessage, Conversation, Friend, FriendRequest } from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -498,6 +498,284 @@ export class UpstashRedisStorage implements IStorage {
   async isMachineCodeBound(machineCode: string): Promise<string | null> {
     const val = await withRetry(() => this.client.hget(this.machineCodeListKey(), machineCode));
     return val ? ensureString(val) : null;
+  }
+
+  // ---------- 聊天功能 ----------
+  // 私有键生成方法
+  private messageKey(messageId: string) {
+    return `msg:${messageId}`;
+  }
+
+  private conversationKey(conversationId: string) {
+    return `conv:${conversationId}`;
+  }
+
+  private conversationMessagesKey(conversationId: string) {
+    return `conv:${conversationId}:messages`;
+  }
+
+  private userConversationsKey(userName: string) {
+    return `u:${userName}:conversations`;
+  }
+
+  private userFriendsKey(userName: string) {
+    return `u:${userName}:friends`;
+  }
+
+  private userFriendRequestsKey(userName: string) {
+    return `u:${userName}:friend_requests`;
+  }
+
+  private friendKey(friendId: string) {
+    return `friend:${friendId}`;
+  }
+
+  private friendRequestKey(requestId: string) {
+    return `friend_req:${requestId}`;
+  }
+
+  // 消息管理
+  async saveMessage(message: ChatMessage): Promise<void> {
+    // 保存消息详情
+    await withRetry(() =>
+      this.client.set(this.messageKey(message.id), message)
+    );
+
+    // 将消息ID添加到对话的消息列表中（按时间排序）
+    await withRetry(() =>
+      this.client.zadd(this.conversationMessagesKey(message.conversation_id), {
+        score: message.timestamp,
+        member: message.id
+      })
+    );
+  }
+
+  async getMessages(conversationId: string, limit = 50, offset = 0): Promise<ChatMessage[]> {
+    // 从有序集合中获取消息ID列表（按时间倒序）
+    const messageIds = await withRetry(() =>
+      this.client.zrange(this.conversationMessagesKey(conversationId), offset, offset + limit - 1, { rev: true })
+    );
+
+    const messages: ChatMessage[] = [];
+    for (const messageId of messageIds) {
+      const messageData = await withRetry(() => this.client.get(this.messageKey(messageId as string)));
+      if (messageData) {
+        messages.push(messageData as ChatMessage);
+      }
+    }
+
+    return messages.reverse(); // 返回正序消息
+  }
+
+  async markMessageAsRead(messageId: string): Promise<void> {
+    const messageData = await withRetry(() => this.client.get(this.messageKey(messageId)));
+    if (messageData) {
+      const message = messageData as ChatMessage;
+      message.is_read = true;
+      await withRetry(() =>
+        this.client.set(this.messageKey(messageId), message)
+      );
+    }
+  }
+
+  // 对话管理
+  async getConversations(userName: string): Promise<Conversation[]> {
+    const conversationIds = await withRetry(() =>
+      this.client.smembers(this.userConversationsKey(userName))
+    );
+
+    const conversations: Conversation[] = [];
+    for (const conversationId of conversationIds) {
+      const conversation = await this.getConversation(conversationId);
+      if (conversation) {
+        conversations.push(conversation);
+      }
+    }
+
+    // 按最后更新时间排序
+    return conversations.sort((a, b) => b.updated_at - a.updated_at);
+  }
+
+  async getConversation(conversationId: string): Promise<Conversation | null> {
+    const conversationData = await withRetry(() =>
+      this.client.get(this.conversationKey(conversationId))
+    );
+
+    return conversationData ? (conversationData as Conversation) : null;
+  }
+
+  async createConversation(conversation: Conversation): Promise<void> {
+    // 保存对话详情
+    await withRetry(() =>
+      this.client.set(this.conversationKey(conversation.id), conversation)
+    );
+
+    // 将对话ID添加到每个参与者的对话列表中
+    for (const participant of conversation.participants) {
+      await withRetry(() =>
+        this.client.sadd(this.userConversationsKey(participant), conversation.id)
+      );
+    }
+  }
+
+  async updateConversation(conversationId: string, updates: Partial<Conversation>): Promise<void> {
+    const conversation = await this.getConversation(conversationId);
+    if (conversation) {
+      Object.assign(conversation, updates);
+      await withRetry(() =>
+        this.client.set(this.conversationKey(conversationId), conversation)
+      );
+    }
+  }
+
+  async deleteConversation(conversationId: string): Promise<void> {
+    const conversation = await this.getConversation(conversationId);
+    if (conversation) {
+      // 从每个参与者的对话列表中移除
+      for (const participant of conversation.participants) {
+        await withRetry(() =>
+          this.client.srem(this.userConversationsKey(participant), conversationId)
+        );
+      }
+
+      // 删除对话详情
+      await withRetry(() => this.client.del(this.conversationKey(conversationId)));
+
+      // 删除对话的消息列表
+      await withRetry(() => this.client.del(this.conversationMessagesKey(conversationId)));
+    }
+  }
+
+  // 好友管理
+  async getFriends(userName: string): Promise<Friend[]> {
+    const friendIds = await withRetry(() =>
+      this.client.smembers(this.userFriendsKey(userName))
+    );
+
+    const friends: Friend[] = [];
+    for (const friendId of friendIds) {
+      const friendData = await withRetry(() => this.client.get(this.friendKey(friendId)));
+      if (friendData) {
+        friends.push(friendData as Friend);
+      }
+    }
+
+    return friends.sort((a, b) => b.added_at - a.added_at);
+  }
+
+  async addFriend(userName: string, friend: Friend): Promise<void> {
+    // 保存好友详情
+    await withRetry(() =>
+      this.client.set(this.friendKey(friend.id), friend)
+    );
+
+    // 将好友ID添加到用户的好友列表中
+    await withRetry(() =>
+      this.client.sadd(this.userFriendsKey(userName), friend.id)
+    );
+  }
+
+  async removeFriend(userName: string, friendId: string): Promise<void> {
+    // 从用户的好友列表中移除
+    await withRetry(() =>
+      this.client.srem(this.userFriendsKey(userName), friendId)
+    );
+
+    // 删除好友详情
+    await withRetry(() => this.client.del(this.friendKey(friendId)));
+  }
+
+  async updateFriendStatus(friendId: string, status: Friend['status']): Promise<void> {
+    const friendData = await withRetry(() => this.client.get(this.friendKey(friendId)));
+    if (friendData) {
+      const friend = friendData as Friend;
+      friend.status = status;
+      await withRetry(() =>
+        this.client.set(this.friendKey(friendId), friend)
+      );
+    }
+  }
+
+  // 好友申请管理
+  async getFriendRequests(userName: string): Promise<FriendRequest[]> {
+    const requestIds = await withRetry(() =>
+      this.client.smembers(this.userFriendRequestsKey(userName))
+    );
+
+    const requests: FriendRequest[] = [];
+    for (const requestId of requestIds) {
+      const requestData = await withRetry(() => this.client.get(this.friendRequestKey(requestId)));
+      if (requestData) {
+        const request = requestData as FriendRequest;
+        // 只返回相关的申请（发送给该用户的或该用户发送的）
+        if (request.to_user === userName || request.from_user === userName) {
+          requests.push(request);
+        }
+      }
+    }
+
+    return requests.sort((a, b) => b.created_at - a.created_at);
+  }
+
+  async createFriendRequest(request: FriendRequest): Promise<void> {
+    // 保存申请详情
+    await withRetry(() =>
+      this.client.set(this.friendRequestKey(request.id), request)
+    );
+
+    // 将申请ID添加到双方的申请列表中
+    await withRetry(() =>
+      this.client.sadd(this.userFriendRequestsKey(request.from_user), request.id)
+    );
+    await withRetry(() =>
+      this.client.sadd(this.userFriendRequestsKey(request.to_user), request.id)
+    );
+  }
+
+  async updateFriendRequest(requestId: string, status: FriendRequest['status']): Promise<void> {
+    const requestData = await withRetry(() => this.client.get(this.friendRequestKey(requestId)));
+    if (requestData) {
+      const request = requestData as FriendRequest;
+      request.status = status;
+      request.updated_at = Date.now();
+      await withRetry(() =>
+        this.client.set(this.friendRequestKey(requestId), request)
+      );
+    }
+  }
+
+  async deleteFriendRequest(requestId: string): Promise<void> {
+    const requestData = await withRetry(() => this.client.get(this.friendRequestKey(requestId)));
+    if (requestData) {
+      const request = requestData as FriendRequest;
+
+      // 从双方的申请列表中移除
+      await withRetry(() =>
+        this.client.srem(this.userFriendRequestsKey(request.from_user), requestId)
+      );
+      await withRetry(() =>
+        this.client.srem(this.userFriendRequestsKey(request.to_user), requestId)
+      );
+    }
+
+    // 删除申请详情
+    await withRetry(() => this.client.del(this.friendRequestKey(requestId)));
+  }
+
+  // 用户搜索
+  async searchUsers(query: string): Promise<Friend[]> {
+    const allUsers = await this.getAllUsers();
+    const matchedUsers = allUsers.filter(username =>
+      username.toLowerCase().includes(query.toLowerCase())
+    );
+
+    // 转换为Friend格式返回
+    return matchedUsers.map(username => ({
+      id: username,
+      username,
+      status: 'offline' as const,
+      added_at: 0,
+    }));
   }
 
   // 清空所有数据

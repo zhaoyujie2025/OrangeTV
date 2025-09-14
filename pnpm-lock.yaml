@@ -29,6 +29,9 @@ importers:
       '@types/crypto-js':
         specifier: ^4.2.2
         version: 4.2.2
+      '@types/ws':
+        specifier: ^8.18.1
+        version: 8.18.1
       '@upstash/redis':
         specifier: ^1.25.0
         version: 1.35.1
@@ -66,7 +69,7 @@ importers:
         specifier: ^1.1.5
         version: 1.1.5
       next:
-        specifier: ^14.2.23
+        specifier: ^14.2.30
         version: 14.2.30(@babel/core@7.27.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       next-pwa:
         specifier: ^5.6.0
@@ -98,6 +101,9 @@ importers:
       vidstack:
         specifier: ^0.6.15
         version: 0.6.15
+      ws:
+        specifier: ^8.18.3
+        version: 8.18.3
       zod:
         specifier: ^3.24.1
         version: 3.25.67
@@ -1582,6 +1588,9 @@ packages:
 
   '@types/validator@13.15.3':
     resolution: {integrity: sha512-7bcUmDyS6PN3EuD9SlGGOxM77F8WLVsrwkxyWxKnxzmXoequ6c7741QBrANq6htVRGOITJ7z72mTP6Z4XyuG+Q==}
+
+  '@types/ws@8.18.1':
+    resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
   '@types/yargs-parser@21.0.3':
     resolution: {integrity: sha512-I4q9QU9MQv4oEOz4tAHJtNz1cwuLxn2F3xcc2iV5WdqLPpUnj30aUuxt1mAxYTG+oe8CZMV/+6rU4S4gRDzqtQ==}
@@ -5266,6 +5275,18 @@ packages:
       utf-8-validate:
         optional: true
 
+  ws@8.18.3:
+    resolution: {integrity: sha512-PEIGCY5tSlUt50cqyMXfCzX+oOPqN0vuGqWzbcJ2xvnkzkq46oOpz7dQaTDBdfICb4N14+GARUDw2XV2N4tvzg==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
   xml-name-validator@3.0.0:
     resolution: {integrity: sha512-A5CUptxDsvxKJEU3yO6DuWBSJz/qizqzJKOMIfUJHETbBw/sFaDxgd6fxm1ewUaM0jZ444Fc5vC5ROYurg/4Pw==}
 
@@ -7059,6 +7080,10 @@ snapshots:
   '@types/trusted-types@2.0.7': {}
 
   '@types/validator@13.15.3': {}
+
+  '@types/ws@8.18.1':
+    dependencies:
+      '@types/node': 24.0.3
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -9880,7 +9905,7 @@ snapshots:
       '@next/env': 14.2.30
       '@swc/helpers': 0.5.5
       busboy: 1.6.0
-      caniuse-lite: 1.0.30001723
+      caniuse-lite: 1.0.30001741
       graceful-fs: 4.2.11
       postcss: 8.4.31
       react: 18.3.1
@@ -11370,6 +11395,8 @@ snapshots:
       typedarray-to-buffer: 3.1.5
 
   ws@7.5.10: {}
+
+  ws@8.18.3: {}
 
   xml-name-validator@3.0.0: {}
 
