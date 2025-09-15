@@ -89,7 +89,7 @@ async function fetchVersionFromUrl(url: string): Promise<string | null> {
  */
 export function compareVersions(remoteVersion: string): UpdateStatus {
   // 如果版本号相同，无需更新
-  if ('8.8.8' === CURRENT_VERSION) {
+  if ('8.9.0' === CURRENT_VERSION) {
     return UpdateStatus.NO_UPDATE;
   }
 

@@ -42,6 +42,7 @@ export function ChatModal({
   const [isDragging, setIsDragging] = useState(false);
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
   const [dragStartPosition, setDragStartPosition] = useState({ x: 0, y: 0 });
+  const [isMobile, setIsMobile] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -58,19 +59,55 @@ export function ChatModal({
     });
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    if (!touch) return;
+    setIsDragging(true);
+    setDragStartPosition({
+      x: touch.clientX - dragPosition.x,
+      y: touch.clientY - dragPosition.y
+    });
+  };
+
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging) return;
 
     const newX = e.clientX - dragStartPosition.x;
     const newY = e.clientY - dragStartPosition.y;
 
-    // 限制拖动范围，确保模态框不会完全移出视口
-    const maxX = window.innerWidth - 400; // 模态框最小宽度
-    const maxY = window.innerHeight - 200; // 模态框最小高度
+    // 允许在全屏范围内拖动，保留边距避免完全移出
+    const edgePadding = 40;
+    const maxX = window.innerWidth - edgePadding;
+    const minX = - (window.innerWidth - edgePadding);
+    const maxY = window.innerHeight - edgePadding;
+    const minY = - (window.innerHeight - edgePadding);
 
     setDragPosition({
-      x: Math.max(-200, Math.min(maxX, newX)),
-      y: Math.max(0, Math.min(maxY, newY))
+      x: Math.max(minX, Math.min(maxX, newX)),
+      y: Math.max(minY, Math.min(maxY, newY))
+    });
+  }, [isDragging, dragStartPosition]);
+
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    if (!isDragging) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    const newX = touch.clientX - dragStartPosition.x;
+    const newY = touch.clientY - dragStartPosition.y;
+
+    const edgePadding = 40;
+    const maxX = window.innerWidth - edgePadding;
+    const minX = - (window.innerWidth - edgePadding);
+    const maxY = window.innerHeight - edgePadding;
+    const minY = - (window.innerHeight - edgePadding);
+
+    // 阻止页面滚动
+    e.preventDefault();
+
+    setDragPosition({
+      x: Math.max(minX, Math.min(maxX, newX)),
+      y: Math.max(minY, Math.min(maxY, newY))
     });
   }, [isDragging, dragStartPosition]);
 
@@ -78,11 +115,31 @@ export function ChatModal({
     setIsDragging(false);
   }, []);
 
-  // 添加全局鼠标事件监听
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  // 检测屏幕大小
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
+
+  // 添加全局鼠标/触摸事件监听
   useEffect(() => {
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchend', handleTouchEnd);
       document.body.style.cursor = 'grabbing';
       document.body.style.userSelect = 'none';
     }
@@ -90,10 +147,12 @@ export function ChatModal({
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove as any);
+      document.removeEventListener('touchend', handleTouchEnd as any);
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
     };
-  }, [isDragging, handleMouseMove, handleMouseUp]);
+  }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
 
   // 实时搜索功能
   useEffect(() => {
@@ -772,18 +831,38 @@ export function ChatModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black bg-opacity-50" style={{ zIndex: '99999' }}>
+    <div
+      className={`z-[2147483647] ${isMobile
+        ? 'fixed top-0 left-0 right-0 bottom-0 bg-white dark:bg-gray-900'
+        : 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50'
+        }`}
+      style={{
+        zIndex: '2147483647',
+        ...(isMobile && {
+          paddingTop: '56px', // 减少顶部padding
+          paddingBottom: '72px' // 减少底部padding
+        })
+      }}
+    >
       <div
-        className="w-full max-w-6xl h-[80vh] bg-white dark:bg-gray-900 rounded-lg shadow-xl flex relative"
+        className={`${isMobile
+          ? 'w-full bg-white dark:bg-gray-900 flex flex-col'
+          : 'w-full max-w-6xl h-[80vh] bg-white dark:bg-gray-900 rounded-lg shadow-xl flex flex-row relative'
+          }`}
         style={{
-          transform: `translate(${dragPosition.x}px, ${dragPosition.y}px)`,
-          transition: isDragging ? 'none' : 'transform 0.2s ease-out'
+          transform: !isMobile ? `translate(${dragPosition.x}px, ${dragPosition.y}px)` : 'none',
+          transition: isDragging ? 'none' : 'transform 0.2s ease-out',
+          ...(isMobile && {
+            height: 'calc(100vh - 128px)', // 调整为新的padding总和
+            minHeight: 'calc(100vh - 128px)'
+          })
         }}
       >
-        {/* 拖动头部 */}
+        {/* 拖动头部 - 仅桌面端显示 */}
         <div
-          className="absolute top-0 left-0 right-0 h-8 bg-gray-100 dark:bg-gray-800 rounded-t-lg cursor-grab active:cursor-grabbing flex items-center justify-center"
+          className="absolute top-0 left-0 right-0 h-8 bg-gray-100 dark:bg-gray-800 rounded-t-lg cursor-grab active:cursor-grabbing hidden md:flex items-center justify-center"
           onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
           style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
         >
           <div className="flex space-x-1">
@@ -793,7 +872,16 @@ export function ChatModal({
           </div>
         </div>
         {/* 左侧面板 */}
-        <div className="w-1/3 border-r border-gray-200 dark:border-gray-700 flex flex-col mt-8">
+        <div className={`${isMobile
+          ? `w-full flex flex-col ${selectedConversation ? 'hidden' : 'flex'}`
+          : `w-1/3 border-r border-gray-200 dark:border-gray-700 flex flex-col mt-8 h-auto ${selectedConversation ? 'block' : 'block'}`
+          }`}
+          style={{
+            ...(isMobile && {
+              height: '100%',
+              maxHeight: '100%'
+            })
+          }}>
           {/* 头部 */}
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between mb-4">
@@ -1139,12 +1227,32 @@ export function ChatModal({
         </div>
 
         {/* 右侧聊天区域 */}
-        <div className="flex-1 flex flex-col mt-8">
+        <div className={`${isMobile
+          ? `w-full flex flex-col ${selectedConversation ? 'flex' : 'hidden'}`
+          : `flex-1 flex flex-col mt-8 ${selectedConversation ? 'block' : 'block'}`
+          }`}
+          style={{
+            ...(isMobile && {
+              height: '100%',
+              maxHeight: '100%'
+            })
+          }}>
           {selectedConversation ? (
             <>
               {/* 聊天头部 */}
               <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                 <div className="flex items-center space-x-3">
+                  {/* 移动端返回按钮 */}
+                  {isMobile && (
+                    <button
+                      onClick={() => setSelectedConversation(null)}
+                      className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                  )}
                   {/* 对话头像（显示对方用户的头像，如果是群聊则显示群组图标） */}
                   <div className="flex-shrink-0">
                     {selectedConversation.participants.length === 2 ? (
@@ -1207,7 +1315,8 @@ export function ChatModal({
               </div>
 
               {/* 消息列表 */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-gray-50/30 to-white/50 dark:from-gray-800/30 dark:to-gray-900/50">
+              <div className={`flex-1 overflow-y-auto space-y-4 bg-gradient-to-b from-gray-50/30 to-white/50 dark:from-gray-800/30 dark:to-gray-900/50 ${isMobile ? 'p-3' : 'p-6'
+                }`}>
                 {messages.map((message, index) => {
                   const isOwnMessage = message.sender_id === currentUser?.username;
                   const prevMessage = index > 0 ? messages[index - 1] : null;
@@ -1357,7 +1466,7 @@ export function ChatModal({
                 )}
 
                 {/* 主输入区域 */}
-                <div className="p-4">
+                <div className={`${isMobile ? 'p-3' : 'p-4'} pb-safe`}>
                   <div className="bg-white dark:bg-gray-700 rounded-2xl shadow-sm border border-gray-200/80 dark:border-gray-600/80 backdrop-blur-sm">
                     {/* 顶部工具栏 */}
                     <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100 dark:border-gray-600">
@@ -1498,9 +1607,11 @@ export function ChatModal({
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
-              选择一个对话开始聊天
-            </div>
+            !isMobile && (
+              <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                选择一个对话开始聊天
+              </div>
+            )
           )}
         </div>
       </div>

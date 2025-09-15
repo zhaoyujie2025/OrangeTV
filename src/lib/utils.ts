@@ -72,38 +72,18 @@ export async function getVideoResolutionFromM3u8(m3u8Url: string): Promise<{
   pingTime: number; // 网络延迟（毫秒）
 }> {
   try {
-    // 检查是否需要使用代理
-    const needsProxy = m3u8Url.includes('quark.cn') ||
-      m3u8Url.includes('drive.quark.cn') ||
-      m3u8Url.includes('dl-c-zb-') ||
-      m3u8Url.includes('dl-c-') ||
-      m3u8Url.match(/https?:\/\/[^/]*\.drive\./) ||
-      // 添加更多可能需要代理的域名
-      m3u8Url.includes('ffzy-online') ||
-      m3u8Url.includes('bfikuncdn.com') ||
-      m3u8Url.includes('vip.') ||
-      !m3u8Url.includes('localhost');
-
-    const finalM3u8Url = needsProxy
-      ? `/api/proxy/video?url=${encodeURIComponent(m3u8Url)}`
-      : m3u8Url;
-
-    if (needsProxy) {
-      console.log('Using proxy for M3U8 resolution detection:', m3u8Url);
-    }
-
+    // 直接使用m3u8 URL作为视频源，避免CORS问题
     return new Promise((resolve, reject) => {
       const video = document.createElement('video');
       video.muted = true;
       video.preload = 'metadata';
 
-      // 测量网络延迟（ping时间）
+      // 测量网络延迟（ping时间） - 使用m3u8 URL而不是ts文件
       const pingStart = performance.now();
       let pingTime = 0;
 
-      // 测量ping时间（如果使用代理，则测试代理URL的响应时间）
-      const pingUrl = needsProxy ? `/api/proxy/video/test?url=${encodeURIComponent(m3u8Url)}` : m3u8Url;
-      fetch(pingUrl, { method: 'HEAD', mode: needsProxy ? 'cors' : 'no-cors' })
+      // 测量ping时间（使用m3u8 URL）
+      fetch(m3u8Url, { method: 'HEAD', mode: 'no-cors' })
         .then(() => {
           pingTime = performance.now() - pingStart;
         })
@@ -209,31 +189,17 @@ export async function getVideoResolutionFromM3u8(m3u8Url: string): Promise<{
         }
       });
 
-      hls.loadSource(finalM3u8Url);
+      hls.loadSource(m3u8Url);
       hls.attachMedia(video);
 
       // 监听hls.js错误
       hls.on(Hls.Events.ERROR, (event: any, data: any) => {
-        // 只在开发环境下打印详细错误，生产环境下简化错误信息
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('Video resolution detection failed:', {
-            url: needsProxy ? 'via proxy' : m3u8Url,
-            error: data.details,
-            type: data.type
-          });
-        }
-
+        console.error('HLS错误:', data);
         if (data.fatal) {
           clearTimeout(timeout);
           hls.destroy();
           video.remove();
-
-          // 对于CORS相关错误，提供更友好的错误信息
-          if (data.details === 'manifestLoadError' || data.type === 'networkError') {
-            reject(new Error('Network access restricted'));
-          } else {
-            reject(new Error(`Video analysis failed: ${data.type}`));
-          }
+          reject(new Error(`HLS播放失败: ${data.type}`));
         }
       });
 

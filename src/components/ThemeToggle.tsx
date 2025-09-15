@@ -16,6 +16,7 @@ export function ThemeToggle() {
   const [messageCount, setMessageCount] = useState(0);
   const [chatCount, setChatCount] = useState(0);
   const [friendRequestCount, setFriendRequestCount] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
   const { setTheme, resolvedTheme } = useTheme();
   const pathname = usePathname();
 
@@ -54,6 +55,17 @@ export function ThemeToggle() {
 
   useEffect(() => {
     setMounted(true);
+
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
   }, []);
 
   // 监听主题变化和路由变化，确保主题色始终同步
@@ -84,16 +96,16 @@ export function ThemeToggle() {
 
   return (
     <>
-      <div className="flex items-center space-x-2">
+      <div className={`flex items-center ${isMobile ? 'space-x-1' : 'space-x-2'}`}>
         {/* 聊天按钮 */}
         <button
           onClick={() => setIsChatModalOpen(true)}
-          className='w-10 h-10 p-2 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200/50 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-colors relative'
+          className={`${isMobile ? 'w-8 h-8 p-1.5' : 'w-10 h-10 p-2'} rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200/50 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-colors relative`}
           aria-label='Open chat'
         >
           <MessageCircle className='w-full h-full' />
           {messageCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+            <span className={`absolute ${isMobile ? '-top-0.5 -right-0.5 w-4 h-4 text-xs' : '-top-1 -right-1 w-5 h-5 text-xs'} bg-red-500 text-white rounded-full flex items-center justify-center`}>
               {messageCount > 99 ? '99+' : messageCount}
             </span>
           )}
@@ -102,7 +114,7 @@ export function ThemeToggle() {
         {/* 主题切换按钮 */}
         <button
           onClick={toggleTheme}
-          className='w-10 h-10 p-2 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200/50 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-colors'
+          className={`${isMobile ? 'w-8 h-8 p-1.5' : 'w-10 h-10 p-2'} rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200/50 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-colors`}
           aria-label='Toggle theme'
         >
           {resolvedTheme === 'dark' ? (

@@ -16,6 +16,21 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
 
+# 先复制所有文件
+COPY . .
+
+# 然后检查文件
+RUN echo "文件列表:" && ls -la && \
+    echo "检查 tsconfig.json:" && \
+    if [ -f "tsconfig.json" ]; then \
+        echo "tsconfig.json 存在"; \
+    else \
+        echo "tsconfig.json 不存在"; \
+        echo "查找所有文件:"; \
+        find . -type f -name "*tsconfig*"; \
+        exit 1; \
+    fi
+
 
 # 安装所有依赖
 RUN pnpm install --frozen-lockfile

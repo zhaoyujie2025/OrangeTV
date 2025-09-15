@@ -1969,40 +1969,99 @@ function PlayPageClient() {
         plugins: danmuEnabled ? [
           artplayerPluginDanmuku({
             danmuku: async () => {
-              return await loadDanmuData(currentVideoId);
+              try {
+                const danmuData = await loadDanmuData(currentVideoId);
+                return danmuData;
+              } catch (error) {
+                console.error('加载弹幕失败:', error);
+                return [];
+              }
             },
-            speed: 5, // 弹幕速度
-            opacity: 1, // 透明度
-            fontSize: 25, // 字体大小
-            color: '#FFFFFF', // 默认颜色
-            mode: 0, // 弹幕模式
-            margin: [10, '25%'], // 边距
-            antiOverlap: true, // 防重叠
-            useWorker: true, // 使用 WebWorker
-            synchronousPlayback: false, // 非同步播放
-            filter: (danmu: any) => danmu.text.length < 50, // 过滤长弹幕
-            lockTime: 5, // 锁定时间
-            maxLength: 100, // 最大长度
-            minWidth: 200, // 最小宽度
-            maxWidth: 500, // 最大宽度
-            theme: 'dark', // 主题
+            speed: 5,
+            opacity: 1,
+            fontSize: 25,
+            color: '#FFFFFF',
+            mode: 0,
+            margin: [10, '25%'],
+            antiOverlap: true,
+            useWorker: true,
+            synchronousPlayback: false,
+            filter: (danmu: any) => danmu.text.length < 50,
+            lockTime: 5,
+            maxLength: 100,
+            minWidth: 200,
+            maxWidth: 500,
+            theme: 'dark',
+            // 核心配置：启用弹幕发送功能  
+            panel: true, // 启用弹幕输入面板
+            emit: true, // 启用弹幕发送
+            placeholder: '发个弹幕呗~',
+            maxlength: 50,
             beforeVisible: (danmu: any) => {
-              // 可在此处添加额外的过滤逻辑
               return !danmu.text.includes('广告');
             },
             beforeEmit: async (danmu: any) => {
-              // 发送弹幕前的处理
               try {
-                await sendDanmu(currentVideoId, {
+                const result = await sendDanmu(currentVideoId, {
                   text: danmu.text,
                   color: danmu.color || '#FFFFFF',
                   mode: danmu.mode || 0,
                   time: artPlayerRef.current?.currentTime || 0
                 });
-                return danmu;
+
+                // 显示成功提示
+                if (artPlayerRef.current?.notice) {
+                  artPlayerRef.current.notice.show = '✅ 弹幕发送成功！';
+                }
+
+                // 创建符合插件要求的弹幕对象
+                const danmuObject = {
+                  text: danmu.text,
+                  color: danmu.color || '#FFFFFF',
+                  mode: danmu.mode || 0,
+                  time: (artPlayerRef.current?.currentTime || 0) + 0.5,
+                  border: false,
+                  size: 25
+                };
+
+                // 手动触发弹幕显示（如果beforeEmit的返回值不能正常显示）
+                // 这是一个备用方案
+                setTimeout(() => {
+                  try {
+                    const danmakuPlugin = artPlayerRef.current?.plugins?.artplayerPluginDanmuku;
+                    if (danmakuPlugin) {
+                      // 确保弹幕未被隐藏
+                      try {
+                        if (danmakuPlugin.isHide && danmakuPlugin.show) {
+                          danmakuPlugin.show();
+                        }
+                      } catch { }
+
+                      // 尝试不同的方法来添加弹幕
+                      if (danmakuPlugin.emit) {
+                        danmakuPlugin.emit(danmuObject);
+                      } else if (danmakuPlugin.add) {
+                        danmakuPlugin.add(danmuObject);
+                      } else if (danmakuPlugin.send) {
+                        danmakuPlugin.send(danmuObject);
+                      }
+                    }
+                  } catch (err) {
+                    console.error('❌ 手动添加弹幕失败:', err);
+                  }
+                }, 200);
+
+                // 返回弹幕对象让插件自动处理
+                return danmuObject;
               } catch (error) {
                 console.error('发送弹幕失败:', error);
-                artPlayerRef.current?.notice?.show?.('发送弹幕失败：' + (error as any).message);
+
+                // 显示错误提示
+                if (artPlayerRef.current?.notice) {
+                  artPlayerRef.current.notice.show = '❌ 发送弹幕失败：' + (error as any).message;
+                }
+
+                // 阻止弹幕显示
                 throw error;
               }
             }
@@ -2061,6 +2120,7 @@ function PlayPageClient() {
               return newVal ? '弹幕已开启' : '弹幕已关闭';
             },
           },
+
           {
             name: '跳过片头片尾',
             html: '跳过片头片尾',
@@ -2157,6 +2217,11 @@ function PlayPageClient() {
             url: videoUrl.includes('/api/proxy/video') ? '使用代理' : '直接播放',
             videoElement: artPlayerRef.current?.video ? '视频元素正常' : '视频元素异常'
           });
+        }
+
+        // 检查弹幕插件是否正确加载
+        if (danmuEnabled) {
+          // 弹幕启用，无需调试日志
         }
 
         // 播放器就绪后，如果正在播放则请求 Wake Lock

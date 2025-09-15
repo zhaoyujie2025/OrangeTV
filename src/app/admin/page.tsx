@@ -496,6 +496,7 @@ interface SiteConfig {
   DoubanImageProxy: string;
   DisableYellowFilter: boolean;
   FluidSearch: boolean;
+  RequireDeviceCode: boolean;
 }
 
 // 视频源数据类型
@@ -2295,6 +2296,7 @@ const VideoSourceConfig = ({
   const { isLoading, withLoading } = useLoadingState();
   const [sources, setSources] = useState<DataSource[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingSource, setEditingSource] = useState<DataSource | null>(null);
   const [orderChanged, setOrderChanged] = useState(false);
   const [newSource, setNewSource] = useState<DataSource>({
     name: '',
@@ -2339,6 +2341,32 @@ const VideoSourceConfig = ({
     message: string;
     resultCount: number;
   }>>([]);
+
+  // 单个视频源验证状态
+  const [singleValidationResult, setSingleValidationResult] = useState<{
+    status: 'valid' | 'invalid' | 'no_results' | 'validating' | null;
+    message: string;
+    details?: {
+      responseTime?: number;
+      resultCount?: number;
+      error?: string;
+      searchKeyword?: string;
+    };
+  }>({ status: null, message: '' });
+  const [isSingleValidating, setIsSingleValidating] = useState(false);
+
+  // 新增视频源验证状态
+  const [newSourceValidationResult, setNewSourceValidationResult] = useState<{
+    status: 'valid' | 'invalid' | 'no_results' | 'validating' | null;
+    message: string;
+    details?: {
+      responseTime?: number;
+      resultCount?: number;
+      error?: string;
+      searchKeyword?: string;
+    };
+  }>({ status: null, message: '' });
+  const [isNewSourceValidating, setIsNewSourceValidating] = useState(false);
 
   // dnd-kit 传感器
   const sensors = useSensors(
@@ -2422,9 +2450,40 @@ const VideoSourceConfig = ({
         from: 'custom',
       });
       setShowAddForm(false);
+      // 清除检测结果
+      clearNewSourceValidation();
     }).catch(() => {
       console.error('操作失败', 'add', newSource);
     });
+  };
+
+  const handleEditSource = () => {
+    if (!editingSource || !editingSource.name || !editingSource.api) return;
+    withLoading('editSource', async () => {
+      await callSourceApi({
+        action: 'edit',
+        key: editingSource.key,
+        name: editingSource.name,
+        api: editingSource.api,
+        detail: editingSource.detail,
+      });
+      setEditingSource(null);
+    }).catch(() => {
+      console.error('操作失败', 'edit', editingSource);
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingSource(null);
+    // 清除单个源的检测结果
+    setSingleValidationResult({ status: null, message: '' });
+    setIsSingleValidating(false);
+  };
+
+  // 清除新增视频源检测结果
+  const clearNewSourceValidation = () => {
+    setNewSourceValidationResult({ status: null, message: '' });
+    setIsNewSourceValidating(false);
   };
 
   const handleDragEnd = (event: any) => {
@@ -2542,6 +2601,149 @@ const VideoSourceConfig = ({
         throw error;
       }
     });
+  };
+
+  // 通用视频源有效性检测函数
+  const handleValidateSource = async (
+    api: string,
+    name: string,
+    isNewSource: boolean = false
+  ) => {
+    if (!api.trim()) {
+      showAlert({ type: 'warning', title: 'API地址不能为空', message: '请输入有效的API地址' });
+      return;
+    }
+
+    const validationKey = isNewSource ? 'validateNewSource' : 'validateSingleSource';
+    const setValidating = isNewSource ? setIsNewSourceValidating : setIsSingleValidating;
+    const setResult = isNewSource ? setNewSourceValidationResult : setSingleValidationResult;
+
+    await withLoading(validationKey, async () => {
+      setValidating(true);
+      setResult({ status: 'validating', message: '检测中...' });
+
+      const startTime = Date.now();
+      const testKeyword = '灵笼';
+
+      try {
+        // 构建检测 URL，使用临时 API 地址
+        const eventSource = new EventSource(`/api/admin/source/validate?q=${encodeURIComponent(testKeyword)}&tempApi=${encodeURIComponent(api.trim())}&tempName=${encodeURIComponent(name)}`);
+
+        eventSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            const responseTime = Date.now() - startTime;
+
+            switch (data.type) {
+              case 'start':
+                console.log(`开始检测视频源: ${name}`);
+                break;
+
+              case 'source_result':
+              case 'source_error':
+                if (data.source === 'temp') {
+                  let message = '';
+                  let details: any = {
+                    responseTime,
+                    searchKeyword: testKeyword
+                  };
+
+                  if (data.status === 'valid') {
+                    message = '搜索正常';
+                    details.resultCount = data.resultCount || 0;
+                  } else if (data.status === 'no_results') {
+                    message = '无法搜索到结果';
+                    details.resultCount = 0;
+                  } else {
+                    message = '连接失败';
+                    details.error = data.error || '未知错误';
+                  }
+
+                  setResult({
+                    status: data.status,
+                    message,
+                    details
+                  });
+                }
+                break;
+
+              case 'complete':
+                console.log(`检测完成: ${name}`);
+                eventSource.close();
+                setValidating(false);
+                break;
+            }
+          } catch (error) {
+            console.error('解析EventSource数据失败:', error);
+          }
+        };
+
+        eventSource.onerror = (error) => {
+          console.error('EventSource错误:', error);
+          eventSource.close();
+          setValidating(false);
+          const responseTime = Date.now() - startTime;
+          setResult({
+            status: 'invalid',
+            message: '连接错误，请重试',
+            details: {
+              responseTime,
+              error: '网络连接失败',
+              searchKeyword: testKeyword
+            }
+          });
+        };
+
+        // 设置超时，防止长时间等待
+        setTimeout(() => {
+          if (eventSource.readyState === EventSource.OPEN) {
+            eventSource.close();
+            setValidating(false);
+            const responseTime = Date.now() - startTime;
+            setResult({
+              status: 'invalid',
+              message: '检测超时，请重试',
+              details: {
+                responseTime,
+                error: '请求超时（30秒）',
+                searchKeyword: testKeyword
+              }
+            });
+          }
+        }, 30000); // 30秒超时
+
+      } catch (error) {
+        setValidating(false);
+        const responseTime = Date.now() - startTime;
+        setResult({
+          status: 'invalid',
+          message: error instanceof Error ? error.message : '未知错误',
+          details: {
+            responseTime,
+            error: error instanceof Error ? error.message : '未知错误',
+            searchKeyword: testKeyword
+          }
+        });
+      }
+    });
+  };
+
+  // 单个视频源有效性检测函数
+  const handleValidateSingleSource = async () => {
+    if (!editingSource) {
+      showAlert({ type: 'warning', title: '没有可检测的视频源', message: '请确保正在编辑视频源' });
+      return;
+    }
+    await handleValidateSource(editingSource.api, editingSource.name, false);
+  };
+
+  // 新增视频源有效性检测函数
+  const handleValidateNewSource = async () => {
+    if (!newSource.name.trim()) {
+      showAlert({ type: 'warning', title: '视频源名称不能为空', message: '请输入视频源名称' });
+      return;
+    }
+    await handleValidateSource(newSource.api, newSource.name, true);
   };
 
   // 获取有效性状态显示
@@ -2671,15 +2873,27 @@ const VideoSourceConfig = ({
           >
             {!source.disabled ? '禁用' : '启用'}
           </button>
-          {source.from !== 'config' && (
-            <button
-              onClick={() => handleDelete(source.key)}
-              disabled={isLoading(`deleteSource_${source.key}`)}
-              className={`${buttonStyles.roundedSecondary} ${isLoading(`deleteSource_${source.key}`) ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              删除
-            </button>
-          )}
+          <button
+            onClick={() => {
+              setEditingSource(source);
+              // 清除之前的检测结果
+              setSingleValidationResult({ status: null, message: '' });
+              setIsSingleValidating(false);
+            }}
+            disabled={isLoading(`editSource_${source.key}`)}
+            className={`${buttonStyles.roundedPrimary} ${isLoading(`editSource_${source.key}`) ? 'opacity-50 cursor-not-allowed' : ''}`}
+            title='编辑此视频源'
+          >
+            编辑
+          </button>
+          <button
+            onClick={() => handleDelete(source.key)}
+            disabled={isLoading(`deleteSource_${source.key}`)}
+            className={`${buttonStyles.roundedSecondary} ${isLoading(`deleteSource_${source.key}`) ? 'opacity-50 cursor-not-allowed' : ''}`}
+            title='删除此视频源'
+          >
+            删除
+          </button>
         </td>
       </tr>
     );
@@ -2824,7 +3038,13 @@ const VideoSourceConfig = ({
               )}
             </button>
             <button
-              onClick={() => setShowAddForm(!showAddForm)}
+              onClick={() => {
+                setShowAddForm(!showAddForm);
+                // 切换表单时清除检测结果
+                if (!showAddForm) {
+                  clearNewSourceValidation();
+                }
+              }}
               className={showAddForm ? buttonStyles.secondary : buttonStyles.success}
             >
               {showAddForm ? '取消' : '添加视频源'}
@@ -2873,13 +3093,198 @@ const VideoSourceConfig = ({
               className='px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
             />
           </div>
-          <div className='flex justify-end'>
+
+          {/* 新增视频源有效性检测结果显示 */}
+          {newSourceValidationResult.status && (
+            <div className='p-3 rounded-lg border'>
+              <div className='space-y-2'>
+                <div className='flex items-center space-x-2'>
+                  <span className='text-sm font-medium text-gray-700 dark:text-gray-300'>检测结果:</span>
+                  <span
+                    className={`px-2 py-1 text-xs rounded-full ${newSourceValidationResult.status === 'valid'
+                      ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
+                      : newSourceValidationResult.status === 'validating'
+                        ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'
+                        : newSourceValidationResult.status === 'no_results'
+                          ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300'
+                          : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
+                      }`}
+                  >
+                    {newSourceValidationResult.status === 'valid' && '✓ '}
+                    {newSourceValidationResult.status === 'validating' && '⏳ '}
+                    {newSourceValidationResult.status === 'no_results' && '⚠️ '}
+                    {newSourceValidationResult.status === 'invalid' && '✗ '}
+                    {newSourceValidationResult.message}
+                  </span>
+                </div>
+                {newSourceValidationResult.details && (
+                  <div className='text-xs text-gray-600 dark:text-gray-400 space-y-1'>
+                    {newSourceValidationResult.details.searchKeyword && (
+                      <div>测试关键词: {newSourceValidationResult.details.searchKeyword}</div>
+                    )}
+                    {newSourceValidationResult.details.responseTime && (
+                      <div>响应时间: {newSourceValidationResult.details.responseTime}ms</div>
+                    )}
+                    {newSourceValidationResult.details.resultCount !== undefined && (
+                      <div>搜索结果数: {newSourceValidationResult.details.resultCount}</div>
+                    )}
+                    {newSourceValidationResult.details.error && (
+                      <div className='text-red-600 dark:text-red-400'>错误信息: {newSourceValidationResult.details.error}</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className='flex justify-end space-x-2'>
+            <button
+              onClick={handleValidateNewSource}
+              disabled={!newSource.api || isNewSourceValidating || isLoading('validateNewSource')}
+              className={`px-4 py-2 ${!newSource.api || isNewSourceValidating || isLoading('validateNewSource') ? buttonStyles.disabled : buttonStyles.primary}`}
+            >
+              {isNewSourceValidating || isLoading('validateNewSource') ? '检测中...' : '有效性检测'}
+            </button>
             <button
               onClick={handleAddSource}
               disabled={!newSource.name || !newSource.key || !newSource.api || isLoading('addSource')}
-              className={`w-full sm:w-auto px-4 py-2 ${!newSource.name || !newSource.key || !newSource.api || isLoading('addSource') ? buttonStyles.disabled : buttonStyles.success}`}
+              className={`px-4 py-2 ${!newSource.name || !newSource.key || !newSource.api || isLoading('addSource') ? buttonStyles.disabled : buttonStyles.success}`}
             >
               {isLoading('addSource') ? '添加中...' : '添加'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 编辑视频源表单 */}
+      {editingSource && (
+        <div className='p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 space-y-4'>
+          <div className='flex items-center justify-between'>
+            <h5 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+              编辑视频源: {editingSource.name}
+            </h5>
+            <button
+              onClick={handleCancelEdit}
+              className='text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+            >
+              ✕
+            </button>
+          </div>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+            <div>
+              <label className='block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1'>
+                名称
+              </label>
+              <input
+                type='text'
+                value={editingSource.name}
+                onChange={(e) =>
+                  setEditingSource((prev) => prev ? ({ ...prev, name: e.target.value }) : null)
+                }
+                className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+              />
+            </div>
+            <div>
+              <label className='block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1'>
+                Key (不可编辑)
+              </label>
+              <input
+                type='text'
+                value={editingSource.key}
+                disabled
+                className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+              />
+            </div>
+            <div>
+              <label className='block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1'>
+                API 地址
+              </label>
+              <input
+                type='text'
+                value={editingSource.api}
+                onChange={(e) =>
+                  setEditingSource((prev) => prev ? ({ ...prev, api: e.target.value }) : null)
+                }
+                className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+              />
+            </div>
+            <div>
+              <label className='block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1'>
+                Detail 地址（选填）
+              </label>
+              <input
+                type='text'
+                value={editingSource.detail || ''}
+                onChange={(e) =>
+                  setEditingSource((prev) => prev ? ({ ...prev, detail: e.target.value }) : null)
+                }
+                className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+              />
+            </div>
+
+            {/* 有效性检测结果显示 */}
+            {singleValidationResult.status && (
+              <div className='col-span-full mt-4 p-3 rounded-lg border'>
+                <div className='space-y-2'>
+                  <div className='flex items-center space-x-2'>
+                    <span className='text-sm font-medium text-gray-700 dark:text-gray-300'>检测结果:</span>
+                    <span
+                      className={`px-2 py-1 text-xs rounded-full ${singleValidationResult.status === 'valid'
+                        ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
+                        : singleValidationResult.status === 'validating'
+                          ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'
+                          : singleValidationResult.status === 'no_results'
+                            ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300'
+                            : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
+                        }`}
+                    >
+                      {singleValidationResult.status === 'valid' && '✓ '}
+                      {singleValidationResult.status === 'validating' && '⏳ '}
+                      {singleValidationResult.status === 'no_results' && '⚠️ '}
+                      {singleValidationResult.status === 'invalid' && '✗ '}
+                      {singleValidationResult.message}
+                    </span>
+                  </div>
+                  {singleValidationResult.details && (
+                    <div className='text-xs text-gray-600 dark:text-gray-400 space-y-1'>
+                      {singleValidationResult.details.searchKeyword && (
+                        <div>测试关键词: {singleValidationResult.details.searchKeyword}</div>
+                      )}
+                      {singleValidationResult.details.responseTime && (
+                        <div>响应时间: {singleValidationResult.details.responseTime}ms</div>
+                      )}
+                      {singleValidationResult.details.resultCount !== undefined && (
+                        <div>搜索结果数: {singleValidationResult.details.resultCount}</div>
+                      )}
+                      {singleValidationResult.details.error && (
+                        <div className='text-red-600 dark:text-red-400'>错误信息: {singleValidationResult.details.error}</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          <div className='flex justify-end space-x-2'>
+            <button
+              onClick={handleCancelEdit}
+              className={buttonStyles.secondary}
+            >
+              取消
+            </button>
+            <button
+              onClick={handleValidateSingleSource}
+              disabled={!editingSource.api || isSingleValidating || isLoading('validateSingleSource')}
+              className={`${!editingSource.api || isSingleValidating || isLoading('validateSingleSource') ? buttonStyles.disabled : buttonStyles.primary}`}
+            >
+              {isSingleValidating || isLoading('validateSingleSource') ? '检测中...' : '有效性检测'}
+            </button>
+            <button
+              onClick={handleEditSource}
+              disabled={!editingSource.name || !editingSource.api || isLoading('editSource')}
+              className={`${!editingSource.name || !editingSource.api || isLoading('editSource') ? buttonStyles.disabled : buttonStyles.success}`}
+            >
+              {isLoading('editSource') ? '保存中...' : '保存'}
             </button>
           </div>
         </div>
@@ -3657,6 +4062,7 @@ const SiteConfigComponent = ({ config, refreshConfig }: { config: AdminConfig | 
     DoubanImageProxy: '',
     DisableYellowFilter: false,
     FluidSearch: true,
+    RequireDeviceCode: true,
   });
 
   // 豆瓣数据源相关状态
@@ -3719,6 +4125,7 @@ const SiteConfigComponent = ({ config, refreshConfig }: { config: AdminConfig | 
         DoubanImageProxy: config.SiteConfig.DoubanImageProxy || '',
         DisableYellowFilter: config.SiteConfig.DisableYellowFilter || false,
         FluidSearch: config.SiteConfig.FluidSearch || true,
+        RequireDeviceCode: config.SiteConfig.RequireDeviceCode !== undefined ? config.SiteConfig.RequireDeviceCode : true,
       });
     }
   }, [config]);
@@ -4101,6 +4508,40 @@ const SiteConfigComponent = ({ config, refreshConfig }: { config: AdminConfig | 
           }
           className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
         />
+      </div>
+
+      {/* 启用设备码验证 */}
+      <div>
+        <div className='flex items-center justify-between'>
+          <label
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            启用设备码验证
+          </label>
+          <button
+            type='button'
+            onClick={() =>
+              setSiteSettings((prev) => ({
+                ...prev,
+                RequireDeviceCode: !prev.RequireDeviceCode,
+              }))
+            }
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${siteSettings.RequireDeviceCode
+              ? buttonStyles.toggleOn
+              : buttonStyles.toggleOff
+              }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full ${buttonStyles.toggleThumb} transition-transform ${siteSettings.RequireDeviceCode
+                ? buttonStyles.toggleThumbOn
+                : buttonStyles.toggleThumbOff
+                }`}
+            />
+          </button>
+        </div>
+        <p className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
+          启用后用户登录时需要绑定设备码，提升账户安全性。禁用后用户可以直接登录而无需绑定设备码。
+        </p>
       </div>
 
       {/* 禁用黄色过滤器 */}

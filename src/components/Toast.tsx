@@ -39,9 +39,21 @@ interface ToastProviderProps {
 export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   React.useEffect(() => {
     setMounted(true);
+
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
   }, []);
 
   const removeToast = useCallback((id: string) => {
@@ -86,16 +98,16 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   };
 
   const getToastIcon = (type: ToastType) => {
-    const iconProps = { className: 'w-5 h-5 flex-shrink-0' };
+    const iconSize = isMobile ? 'w-4 h-4' : 'w-5 h-5';
     switch (type) {
       case 'success':
-        return <CheckCircle {...iconProps} className="w-5 h-5 flex-shrink-0 text-green-500" />;
+        return <CheckCircle className={`${iconSize} flex-shrink-0 text-green-500`} />;
       case 'error':
-        return <XCircle {...iconProps} className="w-5 h-5 flex-shrink-0 text-red-500" />;
+        return <XCircle className={`${iconSize} flex-shrink-0 text-red-500`} />;
       case 'warning':
-        return <AlertCircle {...iconProps} className="w-5 h-5 flex-shrink-0 text-yellow-500" />;
+        return <AlertCircle className={`${iconSize} flex-shrink-0 text-yellow-500`} />;
       case 'info':
-        return <Info {...iconProps} className="w-5 h-5 flex-shrink-0 text-blue-500" />;
+        return <Info className={`${iconSize} flex-shrink-0 text-blue-500`} />;
     }
   };
 
@@ -113,29 +125,36 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   };
 
   const toastContainer = mounted && toasts.length > 0 && (
-    <div className="fixed top-4 right-4 z-[9999] space-y-2 max-w-sm w-full">
+    <div
+      className={`fixed ${isMobile ? 'space-y-1' : 'space-y-2'} ${isMobile
+        ? 'top-14 left-3 right-3 max-w-none z-[2147483648]'
+        : 'top-4 right-4 max-w-sm w-full z-[9999]'
+        }`}
+    >
       {toasts.map((toast) => (
         <div
           key={toast.id}
           className={`
-            flex items-start gap-3 p-4 rounded-lg border shadow-lg
+            flex items-start gap-3 rounded-lg border shadow-lg
             transform transition-all duration-300 ease-out
-            animate-in slide-in-from-right-2
+            ${isMobile ? 'p-3 text-sm' : 'p-4'}
+            ${isMobile ? 'animate-in slide-in-from-top-2' : 'animate-in slide-in-from-right-2'}
             ${getToastStyles(toast.type)}
           `}
         >
           {getToastIcon(toast.type)}
           <div className="flex-1 min-w-0">
-            <h4 className="text-sm font-medium">{toast.title}</h4>
+            <h4 className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>{toast.title}</h4>
             {toast.message && (
-              <p className="text-sm opacity-90 mt-1">{toast.message}</p>
+              <p className={`opacity-90 mt-1 ${isMobile ? 'text-xs' : 'text-sm'}`}>{toast.message}</p>
             )}
           </div>
           <button
             onClick={() => removeToast(toast.id)}
-            className="flex-shrink-0 text-current opacity-50 hover:opacity-100 transition-opacity"
+            className={`flex-shrink-0 text-current opacity-50 hover:opacity-100 transition-opacity ${isMobile ? 'p-1' : ''
+              }`}
           >
-            <X className="w-4 h-4" />
+            <X className={isMobile ? 'w-3 h-3' : 'w-4 h-4'} />
           </button>
         </div>
       ))}

@@ -80,15 +80,30 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
     (adminConfig.SourceConfig || []).map((s) => [s.key, s])
   );
 
+  // 用于跟踪已存在的API地址，避免重复
+  const existingApiUrls = new Set(
+    Array.from(currentApiSites.values()).map(s => s.api.toLowerCase().trim())
+  );
+
   apiSitesFromFile.forEach(([key, site]) => {
     const existingSource = currentApiSites.get(key);
+    const normalizedApiUrl = site.api.toLowerCase().trim();
+
     if (existingSource) {
       // 如果已存在，只覆盖 name、api、detail 和 from
       existingSource.name = site.name;
       existingSource.api = site.api;
       existingSource.detail = site.detail;
       existingSource.from = 'config';
+      // 更新API地址记录
+      existingApiUrls.add(normalizedApiUrl);
     } else {
+      // 检查API地址是否已存在
+      if (existingApiUrls.has(normalizedApiUrl)) {
+        console.warn(`跳过重复的API地址: ${site.api} (key: ${key})`);
+        return; // 跳过重复的API地址
+      }
+
       // 如果不存在，创建新条目
       currentApiSites.set(key, {
         key,
@@ -98,6 +113,7 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
         from: 'config',
         disabled: false,
       });
+      existingApiUrls.add(normalizedApiUrl);
     }
   });
 
@@ -226,6 +242,8 @@ async function getInitConfig(configFile: string, subConfig: {
         process.env.NEXT_PUBLIC_DISABLE_YELLOW_FILTER === 'true',
       FluidSearch:
         process.env.NEXT_PUBLIC_FLUID_SEARCH !== 'false',
+      RequireDeviceCode:
+        process.env.NEXT_PUBLIC_REQUIRE_DEVICE_CODE !== 'false',
     },
     UserConfig: {
       Users: [],
@@ -337,6 +355,28 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
   }
   if (!adminConfig.LiveConfig || !Array.isArray(adminConfig.LiveConfig)) {
     adminConfig.LiveConfig = [];
+  }
+
+  // 确保 SiteConfig 及其属性存在
+  if (!adminConfig.SiteConfig) {
+    adminConfig.SiteConfig = {
+      SiteName: process.env.NEXT_PUBLIC_SITE_NAME || 'OrangeTV',
+      Announcement: process.env.ANNOUNCEMENT || '本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。',
+      SearchDownstreamMaxPage: Number(process.env.NEXT_PUBLIC_SEARCH_MAX_PAGE) || 5,
+      SiteInterfaceCacheTime: 7200,
+      DoubanProxyType: process.env.NEXT_PUBLIC_DOUBAN_PROXY_TYPE || 'cmliussss-cdn-tencent',
+      DoubanProxy: process.env.NEXT_PUBLIC_DOUBAN_PROXY || '',
+      DoubanImageProxyType: process.env.NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE || 'cmliussss-cdn-tencent',
+      DoubanImageProxy: process.env.NEXT_PUBLIC_DOUBAN_IMAGE_PROXY || '',
+      DisableYellowFilter: process.env.NEXT_PUBLIC_DISABLE_YELLOW_FILTER === 'true',
+      FluidSearch: process.env.NEXT_PUBLIC_FLUID_SEARCH !== 'false',
+      RequireDeviceCode: process.env.NEXT_PUBLIC_REQUIRE_DEVICE_CODE !== 'false',
+    };
+  }
+
+  // 确保 RequireDeviceCode 属性存在
+  if (adminConfig.SiteConfig.RequireDeviceCode === undefined) {
+    adminConfig.SiteConfig.RequireDeviceCode = process.env.NEXT_PUBLIC_REQUIRE_DEVICE_CODE !== 'false';
   }
 
   // 站长变更自检

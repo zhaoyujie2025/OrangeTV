@@ -11,8 +11,40 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
-    version: "8.8.8",
+    version: "8.9.0",
     date: "2025-09-15",
+    added: [
+      "机器识别码设定开关",
+      "配置文件去重添加",
+      "视频源编辑",
+      "单个视频源进行有效性检测"
+    ],
+    changed: [
+      "聊天页面适配移动端"
+    ],
+    fixed: [
+      "弹幕发送问题",
+      "播放页测速问题",
+      "测速问题"
+    ]
+  },
+  {
+    version: "8.8.9",
+    date: "2025-09-14",
+    added: [
+      "聊天，好友等功能",
+      "支持arm架构镜像"
+    ],
+    changed: [
+
+    ],
+    fixed: [
+      "播放页面500问题"
+    ]
+  },
+  {
+    version: "8.8.8",
+    date: "2025-09-12",
     added: [
       "短剧类目聚合",
       "支持短剧类目搜索",
