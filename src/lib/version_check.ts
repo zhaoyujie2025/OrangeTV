@@ -2,7 +2,7 @@
 
 'use client';
 
-import { CURRENT_VERSION } from "@/lib/version";
+import { CURRENT_VERSION } from '@/lib/version';
 
 // 版本检查结果枚举
 export enum UpdateStatus {
@@ -13,7 +13,7 @@ export enum UpdateStatus {
 
 // 远程版本检查URL配置
 const VERSION_CHECK_URLS = [
-  'https://raw.githubusercontent.com/MoonTechLab/LunaTV/main/VERSION.txt',
+  'https://raw.githubusercontent.com/djteang/OrangeTV/refs/heads/main/VERSION.txt',
 ];
 
 /**
@@ -89,19 +89,21 @@ async function fetchVersionFromUrl(url: string): Promise<string | null> {
  */
 export function compareVersions(remoteVersion: string): UpdateStatus {
   // 如果版本号相同，无需更新
-  if ('8.9.0' === CURRENT_VERSION) {
+  if (remoteVersion === CURRENT_VERSION) {
     return UpdateStatus.NO_UPDATE;
   }
 
   try {
     // 解析版本号为数字数组 [X, Y, Z]
-    const currentParts = (CURRENT_VERSION as string).split('.').map((part: string) => {
-      const num = parseInt(part, 10);
-      if (isNaN(num) || num < 0) {
-        throw new Error(`无效的版本号格式: ${CURRENT_VERSION}`);
-      }
-      return num;
-    });
+    const currentParts = (CURRENT_VERSION as string)
+      .split('.')
+      .map((part: string) => {
+        const num = parseInt(part, 10);
+        if (isNaN(num) || num < 0) {
+          throw new Error(`无效的版本号格式: ${CURRENT_VERSION}`);
+        }
+        return num;
+      });
 
     const remoteParts = remoteVersion.split('.').map((part: string) => {
       const num = parseInt(part, 10);

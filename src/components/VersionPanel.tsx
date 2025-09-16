@@ -81,7 +81,7 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
   const fetchRemoteChangelog = async () => {
     try {
       const response = await fetch(
-        'https://raw.githubusercontent.com/MoonTechLab/LunaTV/main/CHANGELOG'
+        'https://raw.githubusercontent.com/djteang/OrangeTV/refs/heads/main/CHANGELOG'
       );
       if (response.ok) {
         const content = await response.text();
@@ -188,10 +188,10 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
       <div
         key={entry.version}
         className={`p-4 rounded-lg border ${isCurrentVersion
-          ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-          : isUpdate
-            ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
-            : 'bg-gray-50 dark:bg-gray-800/60 border-gray-200 dark:border-gray-700'
+            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+            : isUpdate
+              ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+              : 'bg-gray-50 dark:bg-gray-800/60 border-gray-200 dark:border-gray-700'
           }`}
       >
         {/* 版本标题 */}
@@ -363,7 +363,7 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
                     </div>
                   </div>
                   <a
-                    href='https://github.com/MoonTechLab/LunaTV'
+                    href='https://github.com/djteang/OrangeTV'
                     target='_blank'
                     rel='noopener noreferrer'
                     className='inline-flex items-center justify-center gap-2 px-3 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-xs sm:text-sm rounded-lg transition-colors shadow-sm w-full'
@@ -445,8 +445,8 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
                         <div
                           key={index}
                           className={`p-4 rounded-lg border ${entry.version === latestVersion
-                            ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
-                            : 'bg-gray-50 dark:bg-gray-800/60 border-gray-200 dark:border-gray-700'
+                              ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+                              : 'bg-gray-50 dark:bg-gray-800/60 border-gray-200 dark:border-gray-700'
                             }`}
                         >
                           <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3'>
