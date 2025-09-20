@@ -17,6 +17,15 @@ export interface AdminConfig {
     DisableYellowFilter: boolean;
     FluidSearch: boolean;
     RequireDeviceCode: boolean;
+    CustomTheme?: {
+      selectedTheme: string;
+      customCSS: string;
+    };
+  };
+  ThemeConfig?: {
+    defaultTheme: 'default' | 'minimal' | 'warm' | 'fresh';
+    customCSS: string;
+    allowUserCustomization: boolean;
   };
   UserConfig: {
     Users: {

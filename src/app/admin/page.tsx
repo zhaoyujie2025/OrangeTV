@@ -38,7 +38,7 @@ import {
   Users,
   Video,
 } from 'lucide-react';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, Palette } from 'lucide-react';
 import Image from 'next/image';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -47,6 +47,7 @@ import { AdminConfig, AdminConfigResult } from '../../lib/admin.types';
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 
 import DataMigration from '@/components/DataMigration';
+import ThemeManager from '@/components/ThemeManager';
 import PageLayout from '@/components/PageLayout';
 
 // 统一按钮样式系统
@@ -5210,6 +5211,7 @@ function AdminPageClient() {
     categoryConfig: false,
     configFile: false,
     dataMigration: false,
+    themeManager: false,
   });
 
   // 机器码管理状态
@@ -5447,6 +5449,21 @@ function AdminPageClient() {
                 <DataMigration onRefreshConfig={fetchConfig} />
               </CollapsibleTab>
             )}
+
+            {/* 主题定制标签 */}
+            <CollapsibleTab
+              title='主题定制'
+              icon={
+                <Palette
+                  size={20}
+                  className='text-gray-600 dark:text-gray-400'
+                />
+              }
+              isExpanded={expandedTabs.themeManager}
+              onToggle={() => toggleTab('themeManager')}
+            >
+              <ThemeManager showAlert={showAlert} role={role} />
+            </CollapsibleTab>
           </div>
         </div>
       </div>

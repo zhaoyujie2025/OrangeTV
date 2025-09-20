@@ -94,22 +94,27 @@ export function ThemeToggle() {
     });
   };
 
+  // 检查是否在登录页面
+  const isLoginPage = pathname === '/login';
+
   return (
     <>
       <div className={`flex items-center ${isMobile ? 'space-x-1' : 'space-x-2'}`}>
-        {/* 聊天按钮 */}
-        <button
-          onClick={() => setIsChatModalOpen(true)}
-          className={`${isMobile ? 'w-8 h-8 p-1.5' : 'w-10 h-10 p-2'} rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200/50 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-colors relative`}
-          aria-label='Open chat'
-        >
-          <MessageCircle className='w-full h-full' />
-          {messageCount > 0 && (
-            <span className={`absolute ${isMobile ? '-top-0.5 -right-0.5 w-4 h-4 text-xs' : '-top-1 -right-1 w-5 h-5 text-xs'} bg-red-500 text-white rounded-full flex items-center justify-center`}>
-              {messageCount > 99 ? '99+' : messageCount}
-            </span>
-          )}
-        </button>
+        {/* 聊天按钮 - 在登录页面不显示 */}
+        {!isLoginPage && (
+          <button
+            onClick={() => setIsChatModalOpen(true)}
+            className={`${isMobile ? 'w-8 h-8 p-1.5' : 'w-10 h-10 p-2'} rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200/50 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-colors relative`}
+            aria-label='Open chat'
+          >
+            <MessageCircle className='w-full h-full' />
+            {messageCount > 0 && (
+              <span className={`absolute ${isMobile ? '-top-0.5 -right-0.5 w-4 h-4 text-xs' : '-top-1 -right-1 w-5 h-5 text-xs'} bg-red-500 text-white rounded-full flex items-center justify-center`}>
+                {messageCount > 99 ? '99+' : messageCount}
+              </span>
+            )}
+          </button>
+        )}
 
         {/* 主题切换按钮 */}
         <button
@@ -125,14 +130,16 @@ export function ThemeToggle() {
         </button>
       </div>
 
-      {/* 聊天模态框 */}
-      <ChatModal
-        isOpen={isChatModalOpen}
-        onClose={() => setIsChatModalOpen(false)}
-        onMessageCountChange={handleMessageCountFromModal}
-        onChatCountReset={handleChatCountReset}
-        onFriendRequestCountReset={handleFriendRequestCountReset}
-      />
+      {/* 聊天模态框 - 在登录页面不渲染 */}
+      {!isLoginPage && (
+        <ChatModal
+          isOpen={isChatModalOpen}
+          onClose={() => setIsChatModalOpen(false)}
+          onMessageCountChange={handleMessageCountFromModal}
+          onChatCountReset={handleChatCountReset}
+          onFriendRequestCountReset={handleFriendRequestCountReset}
+        />
+      )}
     </>
   );
 }

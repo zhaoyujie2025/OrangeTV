@@ -12,6 +12,7 @@ import MachineCode from '@/lib/machine-code';
 
 import { useSite } from '@/components/SiteProvider';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import GlobalThemeLoader from '@/components/GlobalThemeLoader';
 
 // 版本显示组件
 function VersionDisplay() {
@@ -195,6 +196,7 @@ function LoginPageClient() {
 
   return (
     <div className='relative min-h-screen flex items-center justify-center px-4 overflow-hidden'>
+      <GlobalThemeLoader />
       <div className='absolute top-4 right-4'>
         <ThemeToggle />
       </div>

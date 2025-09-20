@@ -1797,6 +1797,37 @@ function PlayPageClient() {
       typeof window !== 'undefined' &&
       typeof (window as any).webkitConvertPointFromNodeToPage === 'function';
 
+    // 检测是否为移动端设备
+    const isMobile = typeof window !== 'undefined' && (
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      window.innerWidth <= 768
+    );
+
+    // 根据设备类型调整弹幕配置
+    const getDanmuConfig = () => {
+      if (isMobile) {
+        return {
+          fontSize: 20, // 移动端字体稍小
+          margin: [5, '20%'], // 移动端边距更小
+          minWidth: 150, // 移动端最小宽度更小
+          maxWidth: 300, // 移动端最大宽度限制
+          maxlength: 30, // 移动端字符长度限制
+          placeholder: '发弹幕~', // 移动端简化提示文字
+        };
+      } else {
+        return {
+          fontSize: 25, // 桌面端正常字体
+          margin: [10, '25%'], // 桌面端正常边距
+          minWidth: 200, // 桌面端最小宽度
+          maxWidth: 500, // 桌面端最大宽度
+          maxlength: 50, // 桌面端字符长度
+          placeholder: '发个弹幕呗~', // 桌面端完整提示文字
+        };
+      }
+    };
+
+    const danmuConfig = getDanmuConfig();
+
     // 非WebKit浏览器且播放器已存在，使用switch方法切换
     if (!isWebkit && artPlayerRef.current) {
       artPlayerRef.current.switch = videoUrl;
@@ -1977,26 +2008,54 @@ function PlayPageClient() {
                 return [];
               }
             },
-            speed: 5,
+            speed: isMobile ? 4 : 5, // 移动端弹幕速度稍慢
             opacity: 1,
-            fontSize: 25,
+            fontSize: danmuConfig.fontSize,
             color: '#FFFFFF',
             mode: 0,
-            margin: [10, '25%'],
+            margin: danmuConfig.margin,
             antiOverlap: true,
             useWorker: true,
             synchronousPlayback: false,
-            filter: (danmu: any) => danmu.text.length < 50,
-            lockTime: 5,
-            maxLength: 100,
-            minWidth: 200,
-            maxWidth: 500,
+            filter: (danmu: any) => danmu.text.length < (isMobile ? 30 : 50),
+            lockTime: isMobile ? 3 : 5, // 移动端锁定时间更短
+            maxLength: isMobile ? 80 : 100, // 移动端最大长度限制
+            minWidth: danmuConfig.minWidth,
+            maxWidth: danmuConfig.maxWidth,
             theme: 'dark',
             // 核心配置：启用弹幕发送功能  
             panel: true, // 启用弹幕输入面板
             emit: true, // 启用弹幕发送
-            placeholder: '发个弹幕呗~',
-            maxlength: 50,
+            placeholder: danmuConfig.placeholder,
+            maxlength: danmuConfig.maxlength,
+            // 移动端专用配置
+            ...(isMobile && {
+              panelStyle: {
+                fontSize: '14px',
+                padding: '8px 12px',
+                borderRadius: '20px',
+                background: 'rgba(0, 0, 0, 0.8)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                color: '#ffffff',
+                outline: 'none',
+                width: '100%',
+                maxWidth: '280px',
+                boxSizing: 'border-box',
+              },
+              buttonStyle: {
+                fontSize: '12px',
+                padding: '6px 12px',
+                borderRadius: '16px',
+                background: 'linear-gradient(45deg, #3b82f6, #1d4ed8)',
+                border: 'none',
+                color: '#ffffff',
+                cursor: 'pointer',
+                marginLeft: '8px',
+                minWidth: '50px',
+                outline: 'none',
+              },
+            }),
             beforeVisible: (danmu: any) => {
               return !danmu.text.includes('广告');
             },
@@ -2021,7 +2080,7 @@ function PlayPageClient() {
                   mode: danmu.mode || 0,
                   time: (artPlayerRef.current?.currentTime || 0) + 0.5,
                   border: false,
-                  size: 25
+                  size: isMobile ? 18 : 25 // 移动端弹幕字体更小
                 };
 
                 // 手动触发弹幕显示（如果beforeEmit的返回值不能正常显示）

@@ -11,6 +11,7 @@ import { GlobalErrorIndicator } from '../components/GlobalErrorIndicator';
 import { SiteProvider } from '../components/SiteProvider';
 import { ThemeProvider } from '../components/ThemeProvider';
 import { ToastProvider } from '../components/Toast';
+import GlobalThemeLoader from '../components/GlobalThemeLoader';
 
 const inter = Inter({ subsets: ['latin'] });
 export const dynamic = 'force-dynamic';
@@ -110,6 +111,9 @@ export default async function RootLayout({
             __html: `window.RUNTIME_CONFIG = ${JSON.stringify(runtimeConfig)};`,
           }}
         />
+
+        {/* 主题初始化脚本 - 立即执行避免主题闪烁 */}
+        <script src="/theme-init.js" />
       </head>
       <body
         className={`${inter.className} min-h-screen bg-white text-gray-900 dark:bg-black dark:text-gray-200`}
@@ -122,6 +126,7 @@ export default async function RootLayout({
         >
           <ToastProvider>
             <SiteProvider siteName={siteName} announcement={announcement}>
+              <GlobalThemeLoader />
               {children}
               <GlobalErrorIndicator />
             </SiteProvider>

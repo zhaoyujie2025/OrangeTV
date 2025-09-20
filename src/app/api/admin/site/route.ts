@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
       DisableYellowFilter,
       FluidSearch,
       RequireDeviceCode,
+      CustomTheme,
     } = body as {
       SiteName: string;
       Announcement: string;
@@ -52,6 +53,10 @@ export async function POST(request: NextRequest) {
       DisableYellowFilter: boolean;
       FluidSearch: boolean;
       RequireDeviceCode: boolean;
+      CustomTheme?: {
+        selectedTheme: string;
+        customCSS: string;
+      };
     };
 
     // 参数校验
@@ -66,7 +71,11 @@ export async function POST(request: NextRequest) {
       typeof DoubanImageProxy !== 'string' ||
       typeof DisableYellowFilter !== 'boolean' ||
       typeof FluidSearch !== 'boolean' ||
-      typeof RequireDeviceCode !== 'boolean'
+      typeof RequireDeviceCode !== 'boolean' ||
+      (CustomTheme && (
+        typeof CustomTheme.selectedTheme !== 'string' ||
+        typeof CustomTheme.customCSS !== 'string'
+      ))
     ) {
       return NextResponse.json({ error: '参数格式错误' }, { status: 400 });
     }
@@ -97,6 +106,7 @@ export async function POST(request: NextRequest) {
       DisableYellowFilter,
       FluidSearch,
       RequireDeviceCode,
+      CustomTheme,
     };
 
     // 写入数据库

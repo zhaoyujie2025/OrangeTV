@@ -1240,8 +1240,8 @@ export function ChatModal({
           {selectedConversation ? (
             <>
               {/* 聊天头部 */}
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                <div className="flex items-center space-x-3">
+              <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                <div className="flex items-center space-x-2">
                   {/* 移动端返回按钮 */}
                   {isMobile && (
                     <button
@@ -1289,10 +1289,10 @@ export function ChatModal({
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+                    <h3 className="font-medium text-gray-900 dark:text-white truncate text-sm">
                       {selectedConversation.name}
                     </h3>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
                       {selectedConversation.participants.length === 2 ? (
                         // 私人对话：显示在线状态
                         (() => {
@@ -1437,10 +1437,10 @@ export function ChatModal({
               </div>
 
               {/* 消息输入区域 */}
-              <div className="border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
-                {/* 表情选择器 */}
+              <div className="border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 relative">
+                {/* 表情选择器 - 绝对定位，不占据文档流空间 */}
                 {showEmojiPicker && (
-                  <div className="emoji-picker-container mx-4 mt-3 mb-2 p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl">
+                  <div className="emoji-picker-container absolute left-4 right-4 bottom-full mb-2 p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl z-50">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">选择表情</h3>
                       <button
@@ -1466,16 +1466,16 @@ export function ChatModal({
                 )}
 
                 {/* 主输入区域 */}
-                <div className={`${isMobile ? 'p-3' : 'p-4'} pb-safe`}>
+                <div className={`${isMobile ? 'p-2' : 'p-3'} pb-safe`}>
                   <div className="bg-white dark:bg-gray-700 rounded-2xl shadow-sm border border-gray-200/80 dark:border-gray-600/80 backdrop-blur-sm">
                     {/* 顶部工具栏 */}
-                    <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100 dark:border-gray-600">
+                    <div className="flex items-center justify-between px-3 py-1.5 border-b border-gray-100 dark:border-gray-600">
                       {/* 左侧功能按钮组 */}
                       <div className="flex items-center space-x-1">
                         {/* 表情按钮 */}
                         <button
                           onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                          className={`emoji-picker-container p-2.5 rounded-xl transition-all duration-200 transform hover:scale-105 ${showEmojiPicker
+                          className={`emoji-picker-container p-2 rounded-xl transition-all duration-200 transform hover:scale-105 ${showEmojiPicker
                             ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
                             : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20'
                             }`}
@@ -1488,7 +1488,7 @@ export function ChatModal({
                         <button
                           onClick={() => fileInputRef.current?.click()}
                           disabled={uploadingImage}
-                          className="p-2.5 text-gray-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                          className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                           title="上传图片"
                         >
                           {uploadingImage ? (
@@ -1509,7 +1509,7 @@ export function ChatModal({
 
                         {/* 附件按钮（预留） */}
                         <button
-                          className="p-2.5 text-gray-400 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-xl transition-all duration-200 transform hover:scale-105"
+                          className="p-2 text-gray-400 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-xl transition-all duration-200 transform hover:scale-105"
                           disabled
                           title="附件（即将开放）"
                         >
@@ -1538,13 +1538,13 @@ export function ChatModal({
                     </div>
 
                     {/* 消息输入区域 */}
-                    <div className="p-4">
+                    <div className="p-3">
                       <div className="relative">
                         <textarea
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
                           placeholder="输入消息内容... 按Enter发送，Shift+Enter换行"
-                          className="w-full px-4 py-3 pr-16 bg-gray-50 dark:bg-gray-600 border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white dark:focus:bg-gray-500 placeholder-gray-400 dark:placeholder-gray-400 resize-none min-h-[48px] max-h-32 transition-all duration-200"
+                          className="w-full px-3 py-2 pr-14 bg-gray-50 dark:bg-gray-600 border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white dark:focus:bg-gray-500 placeholder-gray-400 dark:placeholder-gray-400 resize-none min-h-[40px] max-h-28 transition-all duration-200"
                           rows={1}
                           maxLength={1000}
                           style={{ height: 'auto' }}
@@ -1575,7 +1575,7 @@ export function ChatModal({
                     </div>
 
                     {/* 底部信息栏 */}
-                    <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-600/50 rounded-b-2xl border-t border-gray-100 dark:border-gray-600">
+                    <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 dark:bg-gray-600/50 rounded-b-2xl border-t border-gray-100 dark:border-gray-600">
                       <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
                         <span className="flex items-center space-x-1">
                           <span>📝</span>

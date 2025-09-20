@@ -45,6 +45,229 @@ function SearchPageClient() {
   const groupRefs = useRef<Map<string, React.RefObject<VideoCardHandle>>>(new Map());
   const groupStatsRef = useRef<Map<string, { douban_id?: number; episodes?: number; source_names: string[] }>>(new Map());
 
+  // 执行搜索的通用函数
+  const performSearch = (query: string) => {
+    const trimmed = query.trim();
+    if (!trimmed) return;
+
+    // 更新搜索查询和状态
+    setSearchQuery(trimmed);
+    currentQueryRef.current = trimmed;
+
+    // 清理缓存标记，确保执行新搜索
+    sessionStorage.removeItem('fromPlayPage');
+
+    // 清空旧的搜索结果和状态
+    if (eventSourceRef.current) {
+      try { eventSourceRef.current.close(); } catch { }
+      eventSourceRef.current = null;
+    }
+    setSearchResults([]);
+    setTotalSources(0);
+    setCompletedSources(0);
+    pendingResultsRef.current = [];
+    if (flushTimerRef.current) {
+      clearTimeout(flushTimerRef.current);
+      flushTimerRef.current = null;
+    }
+
+    // 清理聚合统计缓存和refs
+    groupStatsRef.current.clear();
+    groupRefs.current.clear();
+    setIsLoading(true);
+    setShowResults(true);
+
+    // 读取流式搜索设置
+    let currentFluidSearch = useFluidSearch;
+    if (typeof window !== 'undefined') {
+      const savedFluidSearch = localStorage.getItem('fluidSearch');
+      if (savedFluidSearch !== null) {
+        currentFluidSearch = JSON.parse(savedFluidSearch);
+      } else {
+        const defaultFluidSearch = (window as any).RUNTIME_CONFIG?.FLUID_SEARCH !== false;
+        currentFluidSearch = defaultFluidSearch;
+      }
+    }
+
+    if (currentFluidSearch !== useFluidSearch) {
+      setUseFluidSearch(currentFluidSearch);
+    }
+
+    if (currentFluidSearch) {
+      // 流式搜索
+      const es = new EventSource(`/api/search/ws?q=${encodeURIComponent(trimmed)}`);
+      eventSourceRef.current = es;
+
+      es.onmessage = (event) => {
+        if (!event.data) return;
+        try {
+          const payload = JSON.parse(event.data);
+          if (currentQueryRef.current !== trimmed || eventSourceRef.current !== es) {
+            console.warn('忽略过期的搜索响应:', payload.type, '当前查询:', currentQueryRef.current, '响应查询:', trimmed);
+            return;
+          }
+          switch (payload.type) {
+            case 'start':
+              setTotalSources(payload.totalSources || 0);
+              setCompletedSources(0);
+              break;
+            case 'source_result': {
+              setCompletedSources((prev) => prev + 1);
+              if (Array.isArray(payload.results) && payload.results.length > 0) {
+                const activeYearOrder = (viewMode === 'agg' ? (filterAgg.yearOrder) : (filterAll.yearOrder));
+                const incoming: SearchResult[] =
+                  activeYearOrder === 'none'
+                    ? sortBatchForNoOrder(payload.results as SearchResult[])
+                    : (payload.results as SearchResult[]);
+                pendingResultsRef.current.push(...incoming);
+                if (!flushTimerRef.current) {
+                  flushTimerRef.current = window.setTimeout(() => {
+                    const toAppend = pendingResultsRef.current;
+                    pendingResultsRef.current = [];
+                    startTransition(() => {
+                      setSearchResults((prev) => prev.concat(toAppend));
+                    });
+                    flushTimerRef.current = null;
+                  }, 80);
+                }
+              }
+              break;
+            }
+            case 'source_error':
+              setCompletedSources((prev) => prev + 1);
+              break;
+            case 'complete':
+              setCompletedSources(payload.completedSources || totalSources);
+              if (pendingResultsRef.current.length > 0) {
+                const toAppend = pendingResultsRef.current;
+                pendingResultsRef.current = [];
+                if (flushTimerRef.current) {
+                  clearTimeout(flushTimerRef.current);
+                  flushTimerRef.current = null;
+                }
+                startTransition(() => {
+                  setSearchResults((prev) => {
+                    const newResults = prev.concat(toAppend);
+                    try {
+                      sessionStorage.setItem('cachedSearchQuery', trimmed);
+                      sessionStorage.setItem('cachedSearchResults', JSON.stringify(newResults));
+                      sessionStorage.setItem('cachedSearchState', JSON.stringify({
+                        totalSources: payload.completedSources || totalSources,
+                        completedSources: payload.completedSources || totalSources,
+                      }));
+                      sessionStorage.setItem('cachedSearchFilters', JSON.stringify({
+                        filterAll,
+                        filterAgg,
+                      }));
+                      sessionStorage.setItem('cachedViewMode', viewMode);
+                    } catch (error) {
+                      console.error('缓存搜索结果失败:', error);
+                    }
+                    return newResults;
+                  });
+                });
+              } else {
+                setTimeout(() => {
+                  setSearchResults((prev) => {
+                    try {
+                      sessionStorage.setItem('cachedSearchQuery', trimmed);
+                      sessionStorage.setItem('cachedSearchResults', JSON.stringify(prev));
+                      sessionStorage.setItem('cachedSearchState', JSON.stringify({
+                        totalSources: payload.completedSources || totalSources,
+                        completedSources: payload.completedSources || totalSources,
+                      }));
+                      sessionStorage.setItem('cachedSearchFilters', JSON.stringify({
+                        filterAll,
+                        filterAgg,
+                      }));
+                      sessionStorage.setItem('cachedViewMode', viewMode);
+                    } catch (error) {
+                      console.error('缓存搜索结果失败:', error);
+                    }
+                    return prev;
+                  });
+                }, 100);
+              }
+              setIsLoading(false);
+              try { es.close(); } catch { }
+              if (eventSourceRef.current === es) {
+                eventSourceRef.current = null;
+              }
+              break;
+          }
+        } catch { }
+      };
+
+      es.onerror = () => {
+        setIsLoading(false);
+        if (pendingResultsRef.current.length > 0) {
+          const toAppend = pendingResultsRef.current;
+          pendingResultsRef.current = [];
+          if (flushTimerRef.current) {
+            clearTimeout(flushTimerRef.current);
+            flushTimerRef.current = null;
+          }
+          startTransition(() => {
+            setSearchResults((prev) => prev.concat(toAppend));
+          });
+        }
+        try { es.close(); } catch { }
+        if (eventSourceRef.current === es) {
+          eventSourceRef.current = null;
+        }
+      };
+    } else {
+      // 传统搜索
+      fetch(`/api/search?q=${encodeURIComponent(trimmed)}`)
+        .then(response => response.json())
+        .then(data => {
+          if (currentQueryRef.current !== trimmed) {
+            console.warn('忽略过期的搜索响应 (传统):', '当前查询:', currentQueryRef.current, '响应查询:', trimmed);
+            return;
+          }
+
+          if (data.results && Array.isArray(data.results)) {
+            const activeYearOrder = (viewMode === 'agg' ? (filterAgg.yearOrder) : (filterAll.yearOrder));
+            const results: SearchResult[] =
+              activeYearOrder === 'none'
+                ? sortBatchForNoOrder(data.results as SearchResult[])
+                : (data.results as SearchResult[]);
+
+            setSearchResults(results);
+            setTotalSources(1);
+            setCompletedSources(1);
+
+            try {
+              sessionStorage.setItem('cachedSearchQuery', trimmed);
+              sessionStorage.setItem('cachedSearchResults', JSON.stringify(results));
+              sessionStorage.setItem('cachedSearchState', JSON.stringify({
+                totalSources: 1,
+                completedSources: 1,
+              }));
+              sessionStorage.setItem('cachedSearchFilters', JSON.stringify({
+                filterAll,
+                filterAgg,
+              }));
+              sessionStorage.setItem('cachedViewMode', viewMode);
+            } catch (error) {
+              console.error('缓存搜索结果失败:', error);
+            }
+          }
+          setIsLoading(false);
+        })
+        .catch(() => {
+          setIsLoading(false);
+        });
+    }
+
+    // 保存到搜索历史
+    addSearchHistory(trimmed);
+
+    // 更新URL但不触发重新渲染
+    const newUrl = `/search?q=${encodeURIComponent(trimmed)}`;
+    window.history.replaceState(null, '', newUrl);
+  };
+
   const getGroupRef = (key: string) => {
     let ref = groupRefs.current.get(key);
     if (!ref) {
@@ -136,6 +359,31 @@ function SearchPageClient() {
     });
   };
 
+  // 检查搜索结果与关键字的相关性
+  const isRelevantResult = (item: SearchResult, query: string) => {
+    if (!query.trim()) return true;
+
+    const searchTerms = query.trim().toLowerCase().split(/\s+/);
+    const title = (item.title || '').toLowerCase();
+    const typeName = (item.type_name || '').toLowerCase();
+
+    // 至少匹配一个搜索关键字
+    return searchTerms.some(term => {
+      // 标题包含关键字
+      if (title.includes(term)) return true;
+      // 类型名包含关键字
+      if (typeName.includes(term)) return true;
+      // 支持年份搜索
+      if (term.match(/^\d{4}$/) && item.year === term) return true;
+      // 支持模糊匹配（去除空格和标点符号后的匹配）
+      const cleanTitle = title.replace(/[\s\-_\.]/g, '');
+      const cleanTerm = term.replace(/[\s\-_\.]/g, '');
+      if (cleanTitle.includes(cleanTerm)) return true;
+
+      return false;
+    });
+  };
+
   // 简化的年份排序：unknown/空值始终在最后
   const compareYear = (aYear: string, bYear: string, order: 'none' | 'asc' | 'desc') => {
     // 如果是无排序状态，返回0（保持原顺序）
@@ -209,13 +457,16 @@ function SearchPageClient() {
     });
   }, [aggregatedResults]);
 
-  // 构建筛选选项
+  // 构建筛选选项 - 只基于相关的搜索结果
   const filterOptions = useMemo(() => {
     const sourcesSet = new Map<string, string>();
     const titlesSet = new Set<string>();
     const yearsSet = new Set<string>();
 
-    searchResults.forEach((item) => {
+    // 只考虑与搜索关键字相关的结果来构建过滤选项
+    const relevantResults = searchResults.filter(item => isRelevantResult(item, searchQuery));
+
+    relevantResults.forEach((item) => {
       if (item.source && item.source_name) {
         sourcesSet.set(item.source, item.source_name);
       }
@@ -266,6 +517,9 @@ function SearchPageClient() {
   const filteredAllResults = useMemo(() => {
     const { source, title, year, yearOrder } = filterAll;
     const filtered = searchResults.filter((item) => {
+      // 首先检查相关性
+      if (!isRelevantResult(item, searchQuery)) return false;
+      // 然后应用其他过滤器
       if (source !== 'all' && item.source !== source) return false;
       if (title !== 'all' && item.title !== title) return false;
       if (year !== 'all' && item.year !== year) return false;
@@ -300,6 +554,10 @@ function SearchPageClient() {
   const filteredAggResults = useMemo(() => {
     const { source, title, year, yearOrder } = filterAgg as any;
     const filtered = aggregatedResults.filter(([_, group]) => {
+      // 检查聚合组中是否至少有一个结果与搜索关键字相关
+      const hasRelevantResult = group.some(item => isRelevantResult(item, searchQuery));
+      if (!hasRelevantResult) return false;
+
       const gTitle = group[0]?.title ?? '';
       const gYear = group[0]?.year ?? 'unknown';
       const hasSource = source === 'all' ? true : group.some((item) => item.source === source);
@@ -419,7 +677,61 @@ function SearchPageClient() {
 
     if (query) {
       setSearchQuery(query);
-      // 新搜索：关闭旧连接并清空结果
+
+      // 检查是否从播放页返回，如果是则尝试使用缓存
+      const fromPlayPage = sessionStorage.getItem('fromPlayPage');
+      const cachedQuery = sessionStorage.getItem('cachedSearchQuery');
+      const cachedResults = sessionStorage.getItem('cachedSearchResults');
+      const cachedState = sessionStorage.getItem('cachedSearchState');
+      const cachedFilters = sessionStorage.getItem('cachedSearchFilters');
+      const cachedViewMode = sessionStorage.getItem('cachedViewMode');
+
+      if (fromPlayPage === 'true' && cachedQuery === query.trim() && cachedResults && cachedState) {
+        // 从播放页返回且有缓存，使用缓存的搜索结果
+        console.log('使用缓存的搜索结果');
+
+        try {
+          const results = JSON.parse(cachedResults);
+          const state = JSON.parse(cachedState);
+
+          // 恢复缓存的过滤器和视图状态
+          if (cachedFilters) {
+            const filters = JSON.parse(cachedFilters);
+            if (filters.filterAll) setFilterAll(filters.filterAll);
+            if (filters.filterAgg) setFilterAgg(filters.filterAgg);
+          }
+
+          if (cachedViewMode && ['agg', 'all'].includes(cachedViewMode)) {
+            setViewMode(cachedViewMode as 'agg' | 'all');
+          }
+
+          // 恢复搜索结果和状态
+          setSearchResults(results);
+          setTotalSources(state.totalSources || 0);
+          setCompletedSources(state.completedSources || 0);
+          setIsLoading(false);
+          setShowResults(true);
+
+          // 清理导航标记，避免影响后续搜索
+          sessionStorage.removeItem('fromPlayPage');
+
+          return; // 直接返回，不执行新搜索
+        } catch (error) {
+          console.error('恢复缓存的搜索结果失败:', error);
+          // 缓存损坏，清理缓存并继续正常搜索
+          sessionStorage.removeItem('cachedSearchQuery');
+          sessionStorage.removeItem('cachedSearchResults');
+          sessionStorage.removeItem('cachedSearchState');
+          sessionStorage.removeItem('cachedSearchFilters');
+          sessionStorage.removeItem('cachedViewMode');
+          sessionStorage.removeItem('fromPlayPage');
+        }
+      }
+
+      // 执行新搜索 - 使用performSearch函数（不更新URL，因为URL已经由路由处理了）
+      const trimmed = query.trim();
+
+      // 清空旧的搜索结果和状态
       if (eventSourceRef.current) {
         try { eventSourceRef.current.close(); } catch { }
         eventSourceRef.current = null;
@@ -427,22 +739,19 @@ function SearchPageClient() {
       setSearchResults([]);
       setTotalSources(0);
       setCompletedSources(0);
-      // 清理缓冲
       pendingResultsRef.current = [];
       if (flushTimerRef.current) {
         clearTimeout(flushTimerRef.current);
         flushTimerRef.current = null;
       }
 
-      // 清理聚合统计缓存和refs，防止数据污染
+      // 清理聚合统计缓存和refs
       groupStatsRef.current.clear();
       groupRefs.current.clear();
       setIsLoading(true);
       setShowResults(true);
 
-      const trimmed = query.trim();
-
-      // 每次搜索时重新读取设置，确保使用最新的配置
+      // 读取流式搜索设置
       let currentFluidSearch = useFluidSearch;
       if (typeof window !== 'undefined') {
         const savedFluidSearch = localStorage.getItem('fluidSearch');
@@ -454,13 +763,12 @@ function SearchPageClient() {
         }
       }
 
-      // 如果读取的配置与当前状态不同，更新状态
       if (currentFluidSearch !== useFluidSearch) {
         setUseFluidSearch(currentFluidSearch);
       }
 
       if (currentFluidSearch) {
-        // 流式搜索：打开新的流式连接
+        // 流式搜索
         const es = new EventSource(`/api/search/ws?q=${encodeURIComponent(trimmed)}`);
         eventSourceRef.current = es;
 
@@ -468,7 +776,6 @@ function SearchPageClient() {
           if (!event.data) return;
           try {
             const payload = JSON.parse(event.data);
-            // 强化竞态条件检查：确保是当前查询的响应
             if (currentQueryRef.current !== trimmed || eventSourceRef.current !== es) {
               console.warn('忽略过期的搜索响应:', payload.type, '当前查询:', currentQueryRef.current, '响应查询:', trimmed);
               return;
@@ -481,7 +788,6 @@ function SearchPageClient() {
               case 'source_result': {
                 setCompletedSources((prev) => prev + 1);
                 if (Array.isArray(payload.results) && payload.results.length > 0) {
-                  // 缓冲新增结果，节流刷入，避免频繁重渲染导致闪烁
                   const activeYearOrder = (viewMode === 'agg' ? (filterAgg.yearOrder) : (filterAll.yearOrder));
                   const incoming: SearchResult[] =
                     activeYearOrder === 'none'
@@ -506,7 +812,6 @@ function SearchPageClient() {
                 break;
               case 'complete':
                 setCompletedSources(payload.completedSources || totalSources);
-                // 完成前确保将缓冲写入
                 if (pendingResultsRef.current.length > 0) {
                   const toAppend = pendingResultsRef.current;
                   pendingResultsRef.current = [];
@@ -515,8 +820,47 @@ function SearchPageClient() {
                     flushTimerRef.current = null;
                   }
                   startTransition(() => {
-                    setSearchResults((prev) => prev.concat(toAppend));
+                    setSearchResults((prev) => {
+                      const newResults = prev.concat(toAppend);
+                      try {
+                        sessionStorage.setItem('cachedSearchQuery', trimmed);
+                        sessionStorage.setItem('cachedSearchResults', JSON.stringify(newResults));
+                        sessionStorage.setItem('cachedSearchState', JSON.stringify({
+                          totalSources: payload.completedSources || totalSources,
+                          completedSources: payload.completedSources || totalSources,
+                        }));
+                        sessionStorage.setItem('cachedSearchFilters', JSON.stringify({
+                          filterAll,
+                          filterAgg,
+                        }));
+                        sessionStorage.setItem('cachedViewMode', viewMode);
+                      } catch (error) {
+                        console.error('缓存搜索结果失败:', error);
+                      }
+                      return newResults;
+                    });
                   });
+                } else {
+                  setTimeout(() => {
+                    setSearchResults((prev) => {
+                      try {
+                        sessionStorage.setItem('cachedSearchQuery', trimmed);
+                        sessionStorage.setItem('cachedSearchResults', JSON.stringify(prev));
+                        sessionStorage.setItem('cachedSearchState', JSON.stringify({
+                          totalSources: payload.completedSources || totalSources,
+                          completedSources: payload.completedSources || totalSources,
+                        }));
+                        sessionStorage.setItem('cachedSearchFilters', JSON.stringify({
+                          filterAll,
+                          filterAgg,
+                        }));
+                        sessionStorage.setItem('cachedViewMode', viewMode);
+                      } catch (error) {
+                        console.error('缓存搜索结果失败:', error);
+                      }
+                      return prev;
+                    });
+                  }, 100);
                 }
                 setIsLoading(false);
                 try { es.close(); } catch { }
@@ -530,7 +874,6 @@ function SearchPageClient() {
 
         es.onerror = () => {
           setIsLoading(false);
-          // 错误时也清空缓冲
           if (pendingResultsRef.current.length > 0) {
             const toAppend = pendingResultsRef.current;
             pendingResultsRef.current = [];
@@ -548,11 +891,10 @@ function SearchPageClient() {
           }
         };
       } else {
-        // 传统搜索：使用普通接口
+        // 传统搜索
         fetch(`/api/search?q=${encodeURIComponent(trimmed)}`)
           .then(response => response.json())
           .then(data => {
-            // 强化竞态条件检查：确保是当前查询的响应
             if (currentQueryRef.current !== trimmed) {
               console.warn('忽略过期的搜索响应 (传统):', '当前查询:', currentQueryRef.current, '响应查询:', trimmed);
               return;
@@ -568,6 +910,22 @@ function SearchPageClient() {
               setSearchResults(results);
               setTotalSources(1);
               setCompletedSources(1);
+
+              try {
+                sessionStorage.setItem('cachedSearchQuery', trimmed);
+                sessionStorage.setItem('cachedSearchResults', JSON.stringify(results));
+                sessionStorage.setItem('cachedSearchState', JSON.stringify({
+                  totalSources: 1,
+                  completedSources: 1,
+                }));
+                sessionStorage.setItem('cachedSearchFilters', JSON.stringify({
+                  filterAll,
+                  filterAgg,
+                }));
+                sessionStorage.setItem('cachedViewMode', viewMode);
+              } catch (error) {
+                console.error('缓存搜索结果失败:', error);
+              }
             }
             setIsLoading(false);
           })
@@ -575,10 +933,10 @@ function SearchPageClient() {
             setIsLoading(false);
           });
       }
-      setShowSuggestions(false);
 
-      // 保存到搜索历史 (事件监听会自动更新界面)
-      addSearchHistory(query);
+      setShowSuggestions(false);
+      // 保存到搜索历史
+      addSearchHistory(trimmed);
     } else {
       setShowResults(false);
       setShowSuggestions(false);
@@ -630,38 +988,15 @@ function SearchPageClient() {
     const trimmed = searchQuery.trim().replace(/\s+/g, ' ');
     if (!trimmed) return;
 
-    // 清理所有状态和缓存，确保搜索结果干净
-    setSearchResults([]);
-    pendingResultsRef.current = [];
-    groupStatsRef.current.clear();
-    groupRefs.current.clear();
-
-    // 回显搜索框
-    setSearchQuery(trimmed);
-    setIsLoading(true);
-    setShowResults(true);
     setShowSuggestions(false);
-
-    router.push(`/search?q=${encodeURIComponent(trimmed)}`);
-    // 其余由 searchParams 变化的 effect 处理
+    // 直接调用搜索函数
+    performSearch(trimmed);
   };
 
   const handleSuggestionSelect = (suggestion: string) => {
-    // 清理所有状态和缓存，确保搜索结果干净
-    setSearchResults([]);
-    pendingResultsRef.current = [];
-    groupStatsRef.current.clear();
-    groupRefs.current.clear();
-
-    setSearchQuery(suggestion);
     setShowSuggestions(false);
-
-    // 自动执行搜索
-    setIsLoading(true);
-    setShowResults(true);
-
-    router.push(`/search?q=${encodeURIComponent(suggestion)}`);
-    // 其余由 searchParams 变化的 effect 处理
+    // 直接调用搜索函数
+    performSearch(suggestion);
   };
 
   // 返回顶部功能
@@ -724,19 +1059,9 @@ function SearchPageClient() {
                   const trimmed = searchQuery.trim().replace(/\s+/g, ' ');
                   if (!trimmed) return;
 
-                  // 清理所有状态和缓存，确保搜索结果干净
-                  setSearchResults([]);
-                  pendingResultsRef.current = [];
-                  groupStatsRef.current.clear();
-                  groupRefs.current.clear();
-
-                  // 回显搜索框
-                  setSearchQuery(trimmed);
-                  setIsLoading(true);
-                  setShowResults(true);
                   setShowSuggestions(false);
-
-                  router.push(`/search?q=${encodeURIComponent(trimmed)}`);
+                  // 直接调用搜索函数
+                  performSearch(trimmed);
                 }}
               />
             </div>
@@ -893,16 +1218,8 @@ function SearchPageClient() {
                   <div key={item} className='relative group'>
                     <button
                       onClick={() => {
-                        // 清理所有状态和缓存，确保搜索结果干净
-                        setSearchResults([]);
-                        pendingResultsRef.current = [];
-                        groupStatsRef.current.clear();
-                        groupRefs.current.clear();
-
-                        setSearchQuery(item);
-                        router.push(
-                          `/search?q=${encodeURIComponent(item.trim())}`
-                        );
+                        // 直接调用搜索函数
+                        performSearch(item.trim());
                       }}
                       className='px-4 py-2 bg-gray-500/10 hover:bg-gray-300 rounded-full text-sm text-gray-700 transition-colors duration-200 dark:bg-gray-700/50 dark:hover:bg-gray-600 dark:text-gray-300'
                     >
