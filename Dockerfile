@@ -89,13 +89,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate && \
     # 清理安装缓存减小镜像大小
     pnpm store prune
 
-# 切回非特权用户
-USER nextjs
-
-# 暴露HTTP和WebSocket端口
-EXPOSE 3000 3001
-
-# 创建健康检查脚本
+# 创建健康检查脚本（在切换用户之前以root权限创建）
 RUN echo '#!/usr/bin/env node\n\
 const http = require("http");\n\
 const options = {\n\
@@ -129,7 +123,14 @@ req.on("timeout", () => {\n\
 \n\
 req.setTimeout(5000);\n\
 req.end();' > /app/healthcheck.js && \
-    chmod +x /app/healthcheck.js
+    chmod +x /app/healthcheck.js && \
+    chown nextjs:nodejs /app/healthcheck.js
+
+# 切回非特权用户
+USER nextjs
+
+# 暴露HTTP和WebSocket端口
+EXPOSE 3000 3001
 
 # 添加健康检查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
