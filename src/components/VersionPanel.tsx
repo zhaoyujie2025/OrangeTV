@@ -88,9 +88,17 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
         const parsed = parseChangelog(content);
         setRemoteChangelog(parsed);
 
-        // 检查是否有更新
+        // 检查是否有更新 - 基于日期而非版本号数字大小来确定最新版本
         if (parsed.length > 0) {
-          const latest = parsed[0];
+          // 按日期排序，找到真正的最新版本
+          const sortedByDate = [...parsed].sort((a, b) => {
+            // 解析日期进行比较
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            return dateB.getTime() - dateA.getTime(); // 降序排列，最新的在前
+          });
+
+          const latest = sortedByDate[0];
           setLatestVersion(latest.version);
           setIsHasUpdate(
             compareVersions(latest.version) === UpdateStatus.HAS_UPDATE
@@ -188,10 +196,10 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
       <div
         key={entry.version}
         className={`p-4 rounded-lg border ${isCurrentVersion
-            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-            : isUpdate
-              ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
-              : 'bg-gray-50 dark:bg-gray-800/60 border-gray-200 dark:border-gray-700'
+          ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+          : isUpdate
+            ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+            : 'bg-gray-50 dark:bg-gray-800/60 border-gray-200 dark:border-gray-700'
           }`}
       >
         {/* 版本标题 */}
@@ -441,12 +449,18 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
                         );
                         return !localVersions.includes(entry.version);
                       })
+                      .sort((a, b) => {
+                        // 按日期排序，确保最新的版本在前面显示
+                        const dateA = new Date(a.date);
+                        const dateB = new Date(b.date);
+                        return dateB.getTime() - dateA.getTime(); // 降序排列，最新的在前
+                      })
                       .map((entry, index) => (
                         <div
                           key={index}
                           className={`p-4 rounded-lg border ${entry.version === latestVersion
-                              ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
-                              : 'bg-gray-50 dark:bg-gray-800/60 border-gray-200 dark:border-gray-700'
+                            ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+                            : 'bg-gray-50 dark:bg-gray-800/60 border-gray-200 dark:border-gray-700'
                             }`}
                         >
                           <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3'>
