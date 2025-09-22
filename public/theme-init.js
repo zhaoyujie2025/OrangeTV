@@ -15,31 +15,21 @@
 
       // 应用自定义CSS
       if (css) {
-        let customStyleEl = document.getElementById('init-theme-css');
+        let customStyleEl = document.getElementById('custom-theme-css');
         if (!customStyleEl) {
           customStyleEl = document.createElement('style');
-          customStyleEl.id = 'init-theme-css';
+          customStyleEl.id = 'custom-theme-css';
           document.head.appendChild(customStyleEl);
         }
         customStyleEl.textContent = css;
       }
     }
 
-    // 从localStorage获取保存的主题
-    const savedTheme = localStorage.getItem('app-theme');
-    const savedCustomCSS = localStorage.getItem('app-custom-css') || '';
+    // 应用默认主题避免闪烁，等待GlobalThemeLoader加载全站配置
+    applyTheme('default', '');
+    console.log('主题初始化完成，等待加载全站配置');
 
-    // 立即应用已保存的主题（如果有）
-    if (savedTheme) {
-      applyTheme(savedTheme, savedCustomCSS);
-      console.log('主题已初始化(本地设置):', savedTheme);
-    } else {
-      // 没有用户设置时，先应用默认主题
-      applyTheme('default', '');
-      console.log('主题已初始化(默认)');
-    }
-
-    // 注意：GlobalThemeLoader会在React组件挂载后进一步处理全站配置
+    // 注意：GlobalThemeLoader会在React组件挂载后加载并应用全站主题配置
   } catch (error) {
     console.error('主题初始化失败:', error);
   }

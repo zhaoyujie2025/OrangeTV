@@ -23,7 +23,6 @@ import { DoubanItem } from '@/lib/types';
 import CapsuleSwitch from '@/components/CapsuleSwitch';
 import ContinueWatching from '@/components/ContinueWatching';
 import PageLayout from '@/components/PageLayout';
-import { useThemeInit } from '@/hooks/useTheme';
 import ScrollableRow from '@/components/ScrollableRow';
 import { useSite } from '@/components/SiteProvider';
 import VideoCard from '@/components/VideoCard';
@@ -516,8 +515,6 @@ function HomeClient() {
 }
 
 export default function Home() {
-  // 初始化主题
-  useThemeInit();
   return (
     <Suspense>
       <HomeClient />

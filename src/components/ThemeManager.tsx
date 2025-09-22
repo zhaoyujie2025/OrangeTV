@@ -274,7 +274,6 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
     customCSS: string;
     allowUserCustomization: boolean;
   } | null>(null);
-  const [isGlobalMode, setIsGlobalMode] = useState(false);
 
   const isAdmin = role === 'admin' || role === 'owner';
 
@@ -338,23 +337,23 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
       // 加载全局配置
       const globalConfig = await loadGlobalThemeConfig();
 
-      if (isGlobalMode && globalConfig) {
+      if (globalConfig) {
         // 使用全局配置
         setCurrentTheme(globalConfig.defaultTheme);
         setCustomCSS(globalConfig.customCSS);
         applyTheme(globalConfig.defaultTheme, globalConfig.customCSS);
       } else {
-        // 使用本地配置
-        const savedTheme = localStorage.getItem('app-theme') || globalConfig?.defaultTheme || 'default';
-        const savedCustomCSS = localStorage.getItem('app-custom-css') || '';
-        setCurrentTheme(savedTheme);
-        setCustomCSS(savedCustomCSS);
-        applyTheme(savedTheme, savedCustomCSS);
+        // 如果没有全局配置，使用默认值
+        const defaultTheme = 'default';
+        const defaultCSS = '';
+        setCurrentTheme(defaultTheme);
+        setCustomCSS(defaultCSS);
+        applyTheme(defaultTheme, defaultCSS);
       }
     };
 
     initTheme();
-  }, [isGlobalMode]);
+  }, []);
 
   // 应用主题
   const applyTheme = (themeId: string, css: string = '') => {
@@ -383,7 +382,7 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
     setCurrentTheme(themeId);
     applyTheme(themeId, customCSS);
 
-    if (isGlobalMode && isAdmin) {
+    if (isAdmin) {
       // 保存到全局配置
       const success = await saveGlobalThemeConfig({
         defaultTheme: themeId,
@@ -399,15 +398,12 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
           allowUserCustomization: globalThemeConfig?.allowUserCustomization ?? true,
         });
       }
-    } else {
-      // 保存到本地
-      localStorage.setItem('app-theme', themeId);
     }
 
     const theme = themes.find(t => t.id === themeId);
     showAlert({
       type: 'success',
-      title: isGlobalMode ? '全局主题已设置' : '主题已切换',
+      title: '全站主题已设置',
       message: `已切换到${theme?.name}`,
       timer: 2000
     });
@@ -432,7 +428,7 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
     try {
       applyTheme(currentTheme, customCSS);
 
-      if (isGlobalMode && isAdmin) {
+      if (isAdmin) {
         // 保存到全局配置
         const success = await saveGlobalThemeConfig({
           defaultTheme: currentTheme,
@@ -449,12 +445,10 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
           });
         }
       } else {
-        // 保存到本地
-        localStorage.setItem('app-custom-css', customCSS);
         showAlert({
-          type: 'success',
-          title: '自定义样式已应用',
-          message: '您的自定义CSS已生效',
+          type: 'warning',
+          title: '权限不足',
+          message: '仅管理员可以设置全站主题',
           timer: 2000
         });
       }
@@ -469,14 +463,28 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
   };
 
   // 重置自定义CSS
-  const handleCustomCSSReset = () => {
+  const handleCustomCSSReset = async () => {
     setCustomCSS('');
     applyTheme(currentTheme, '');
-    localStorage.removeItem('app-custom-css');
+
+    if (isAdmin) {
+      // 保存到全局配置
+      await saveGlobalThemeConfig({
+        defaultTheme: currentTheme,
+        customCSS: '',
+        allowUserCustomization: globalThemeConfig?.allowUserCustomization ?? true,
+      });
+
+      setGlobalThemeConfig({
+        defaultTheme: currentTheme,
+        customCSS: '',
+        allowUserCustomization: globalThemeConfig?.allowUserCustomization ?? true,
+      });
+    }
 
     showAlert({
       type: 'success',
-      title: '自定义样式已重置',
+      title: '全站自定义样式已重置',
       timer: 2000
     });
   };
@@ -495,68 +503,33 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
   return (
     <div className="space-y-6">
       {/* 管理员控制面板 */}
-      {isAdmin && (
+      {isAdmin && globalThemeConfig && (
         <div className="bg-theme-surface border border-theme-border rounded-lg p-4">
           <h3 className="text-lg font-semibold text-theme-text mb-4 flex items-center gap-2">
             <Palette className="h-5 w-5" />
-            管理员主题设置
+            全站主题设置
           </h3>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <label className="text-sm font-medium text-theme-text">配置模式</label>
-                <p className="text-xs text-theme-text-secondary mt-1">
-                  选择设置个人主题还是全站默认主题
-                </p>
+            <div className="p-3 bg-theme-accent/5 border border-theme-accent/20 rounded-lg">
+              <div className="text-sm text-theme-text">
+                <strong>当前全站配置：</strong>
               </div>
-              <div className="flex items-center gap-3">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="configMode"
-                    checked={!isGlobalMode}
-                    onChange={() => setIsGlobalMode(false)}
-                    className="w-4 h-4 text-theme-accent"
-                  />
-                  <span className="text-sm text-theme-text">个人设置</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="configMode"
-                    checked={isGlobalMode}
-                    onChange={() => setIsGlobalMode(true)}
-                    className="w-4 h-4 text-theme-accent"
-                  />
-                  <span className="text-sm text-theme-text">全站默认</span>
-                </label>
+              <div className="text-xs text-theme-text-secondary mt-1">
+                默认主题: {themes.find(t => t.id === globalThemeConfig.defaultTheme)?.name || globalThemeConfig.defaultTheme}
+                {globalThemeConfig.customCSS && ' | 包含自定义CSS'}
+                {!globalThemeConfig.allowUserCustomization && ' | 禁止用户自定义'}
               </div>
             </div>
 
-            {globalThemeConfig && (
-              <div className="p-3 bg-theme-accent/5 border border-theme-accent/20 rounded-lg">
-                <div className="text-sm text-theme-text">
-                  <strong>当前全站配置：</strong>
-                </div>
-                <div className="text-xs text-theme-text-secondary mt-1">
-                  默认主题: {themes.find(t => t.id === globalThemeConfig.defaultTheme)?.name || globalThemeConfig.defaultTheme}
-                  {globalThemeConfig.customCSS && ' | 包含自定义CSS'}
-                  {!globalThemeConfig.allowUserCustomization && ' | 禁止用户自定义'}
-                </div>
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900/20 dark:border-blue-700">
+              <div className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
+                <span className="text-sm font-medium">ℹ️ 全站主题</span>
               </div>
-            )}
-
-            {isGlobalMode && (
-              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg dark:bg-yellow-900/20 dark:border-yellow-700">
-                <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
-                  <span className="text-sm font-medium">⚠️ 全站模式</span>
-                </div>
-                <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-                  在此模式下的更改将影响所有用户的默认主题配置
-                </p>
-              </div>
-            )}
+              <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                在此设置的主题配置将应用到整个网站，影响所有用户的默认体验
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -565,18 +538,18 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
       <div>
         <h3 className="text-lg font-semibold text-theme-text mb-4 flex items-center gap-2">
           <Palette className="h-5 w-5" />
-          {isGlobalMode && isAdmin ? '全站默认主题' : '主题选择'}
+          全站主题选择
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {themes.map((theme) => (
             <div
               key={theme.id}
-              className={`relative p-4 border-2 rounded-xl cursor-pointer transition-all ${currentTheme === theme.id
+              className={`relative p-4 border-2 rounded-xl transition-all ${currentTheme === theme.id
                 ? 'border-theme-accent bg-theme-accent/5'
-                : 'border-theme-border bg-theme-surface hover:border-theme-accent/50'
-                }`}
-              onClick={() => handleThemeChange(theme.id)}
+                : 'border-theme-border bg-theme-surface'
+                } ${isAdmin ? 'cursor-pointer hover:border-theme-accent/50' : 'cursor-not-allowed opacity-60'}`}
+              onClick={() => isAdmin && handleThemeChange(theme.id)}
             >
               {/* 主题预览 */}
               <div className="flex items-center justify-between mb-3">
@@ -589,11 +562,11 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleThemePreview(theme.id);
+                      if (isAdmin) handleThemePreview(theme.id);
                     }}
-                    className="p-1 text-theme-text-secondary hover:text-theme-accent transition-colors"
-                    title="预览主题"
-                    disabled={previewMode}
+                    className={`p-1 transition-colors ${isAdmin ? 'text-theme-text-secondary hover:text-theme-accent' : 'text-theme-text-secondary opacity-50 cursor-not-allowed'}`}
+                    title={isAdmin ? "预览主题" : "仅管理员可预览"}
+                    disabled={previewMode || !isAdmin}
                   >
                     <Eye className="h-4 w-4" />
                   </button>
@@ -621,18 +594,35 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-theme-text flex items-center gap-2">
             <Palette className="h-5 w-5" />
-            自定义样式
+            全站自定义样式
           </h3>
-          <button
-            onClick={() => setShowCustomEditor(!showCustomEditor)}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm bg-theme-surface border border-theme-border rounded-lg hover:bg-theme-accent/5 transition-colors"
-          >
-            {showCustomEditor ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            {showCustomEditor ? '收起编辑器' : '展开编辑器'}
-          </button>
+          {isAdmin ? (
+            <button
+              onClick={() => setShowCustomEditor(!showCustomEditor)}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-theme-surface border border-theme-border rounded-lg hover:bg-theme-accent/5 transition-colors"
+            >
+              {showCustomEditor ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              {showCustomEditor ? '收起编辑器' : '展开编辑器'}
+            </button>
+          ) : (
+            <div className="text-sm text-theme-text-secondary">
+              仅管理员可编辑
+            </div>
+          )}
         </div>
 
-        {showCustomEditor && (
+        {!isAdmin && (
+          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg dark:bg-yellow-900/20 dark:border-yellow-700 mb-4">
+            <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
+              <span className="text-sm font-medium">⚠️ 权限限制</span>
+            </div>
+            <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+              您当前没有权限修改全站主题设置，请联系管理员。
+            </p>
+          </div>
+        )}
+
+        {isAdmin && showCustomEditor && (
           <div className="space-y-4">
             <div className="text-sm text-theme-text-secondary bg-theme-surface p-3 rounded-lg border border-theme-border">
               <p className="mb-2">💡 <strong>使用提示：</strong></p>
@@ -685,47 +675,49 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
       </div>
 
       {/* CSS 模板库 */}
-      <div className="bg-theme-surface border border-theme-border rounded-lg p-4">
-        <h4 className="font-medium text-theme-text mb-3 flex items-center gap-2">
-          <Palette className="h-4 w-4" />
-          🎨 样式模板库
-        </h4>
-        <p className="text-sm text-theme-text-secondary mb-4">选择预设模板快速应用炫酷效果，也可以在此基础上进行自定义修改</p>
+      {isAdmin && (
+        <div className="bg-theme-surface border border-theme-border rounded-lg p-4">
+          <h4 className="font-medium text-theme-text mb-3 flex items-center gap-2">
+            <Palette className="h-4 w-4" />
+            🎨 全站样式模板库
+          </h4>
+          <p className="text-sm text-theme-text-secondary mb-4">选择预设模板快速应用炫酷效果到全站，也可以在此基础上进行自定义修改</p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {cssTemplates.map((template) => (
-            <div key={template.id} className="p-3 border border-theme-border rounded-lg hover:bg-theme-accent/5 transition-colors group">
-              <div className="flex items-center justify-between mb-2">
-                <h5 className="text-sm font-medium text-theme-text">{template.name}</h5>
-                <button
-                  onClick={() => handleApplyTemplate(template.css, template.name)}
-                  className="text-xs px-2 py-1 bg-theme-accent text-white rounded hover:opacity-90 transition-opacity opacity-0 group-hover:opacity-100"
-                >
-                  应用
-                </button>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {cssTemplates.map((template) => (
+              <div key={template.id} className="p-3 border border-theme-border rounded-lg hover:bg-theme-accent/5 transition-colors group">
+                <div className="flex items-center justify-between mb-2">
+                  <h5 className="text-sm font-medium text-theme-text">{template.name}</h5>
+                  <button
+                    onClick={() => handleApplyTemplate(template.css, template.name)}
+                    className="text-xs px-2 py-1 bg-theme-accent text-white rounded hover:opacity-90 transition-opacity opacity-0 group-hover:opacity-100"
+                  >
+                    应用
+                  </button>
+                </div>
+                <p className="text-xs text-theme-text-secondary mb-2">{template.description}</p>
+                <div className="text-xs bg-theme-bg rounded p-2 max-h-16 overflow-y-auto">
+                  <code className="whitespace-pre-wrap text-theme-text-secondary">{template.preview}</code>
+                </div>
               </div>
-              <p className="text-xs text-theme-text-secondary mb-2">{template.description}</p>
-              <div className="text-xs bg-theme-bg rounded p-2 max-h-16 overflow-y-auto">
-                <code className="whitespace-pre-wrap text-theme-text-secondary">{template.preview}</code>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <div className="mt-4 p-3 bg-theme-accent/5 border border-theme-accent/20 rounded-lg">
-          <p className="text-xs text-theme-text-secondary">
-            <strong>💡 使用提示：</strong> 点击模板的"应用"按钮将代码复制到自定义CSS编辑器，然后可以在此基础上进行修改。记得点击"应用样式"按钮生效。
-          </p>
+          <div className="mt-4 p-3 bg-theme-accent/5 border border-theme-accent/20 rounded-lg">
+            <p className="text-xs text-theme-text-secondary">
+              <strong>💡 使用提示：</strong> 点击模板的"应用"按钮将代码复制到自定义CSS编辑器，然后可以在此基础上进行修改。记得点击"应用样式"按钮生效。
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 使用说明 */}
       <div className="bg-theme-surface border border-theme-border rounded-lg p-4">
-        <h4 className="font-medium text-theme-text mb-2">📖 主题定制指南</h4>
+        <h4 className="font-medium text-theme-text mb-2">📖 全站主题定制指南</h4>
         <div className="text-sm text-theme-text-secondary space-y-2">
-          <p><strong>内置主题：</strong>选择预设主题即可一键切换整体风格</p>
-          <p><strong>自定义CSS：</strong>通过CSS变量或直接样式实现个性化定制</p>
-          <p><strong>样式模板：</strong>使用预设模板快速实现炫酷效果</p>
+          <p><strong>内置主题：</strong>{isAdmin ? '选择预设主题即可一键切换全站整体风格' : '由管理员设置的全站预设主题'}</p>
+          {isAdmin && <p><strong>自定义CSS：</strong>通过CSS变量或直接样式实现全站个性化定制</p>}
+          {isAdmin && <p><strong>样式模板：</strong>使用预设模板快速实现炫酷效果</p>}
           <p><strong>主题变量：</strong></p>
           <ul className="text-xs space-y-1 ml-4 mt-1">
             <li>• <code className="bg-theme-bg px-1 rounded">--color-theme-bg</code> - 背景色</li>
@@ -734,12 +726,16 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
             <li>• <code className="bg-theme-bg px-1 rounded">--color-theme-text</code> - 主文本色</li>
             <li>• <code className="bg-theme-bg px-1 rounded">--color-theme-border</code> - 边框色</li>
           </ul>
-          <p><strong>常用技巧：</strong></p>
-          <ul className="text-xs space-y-1 ml-4 mt-1">
-            <li>• 修改背景：<code className="bg-theme-bg px-1 rounded">{`body { background: linear-gradient(...); }`}</code></li>
-            <li>• 使用Tailwind：<code className="bg-theme-bg px-1 rounded">{`.my-class { @apply bg-red-500; }`}</code></li>
-            <li>• 组合多个模板效果获得独特样式</li>
-          </ul>
+          {isAdmin && (
+            <>
+              <p><strong>常用技巧：</strong></p>
+              <ul className="text-xs space-y-1 ml-4 mt-1">
+                <li>• 修改背景：<code className="bg-theme-bg px-1 rounded">{`body { background: linear-gradient(...); }`}</code></li>
+                <li>• 使用Tailwind：<code className="bg-theme-bg px-1 rounded">{`.my-class { @apply bg-red-500; }`}</code></li>
+                <li>• 组合多个模板效果获得独特样式</li>
+              </ul>
+            </>
+          )}
         </div>
       </div>
     </div>
