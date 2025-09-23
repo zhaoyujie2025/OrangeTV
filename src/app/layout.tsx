@@ -6,6 +6,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 
 import { getConfig } from '@/lib/config';
+import { db } from '@/lib/db';
 
 import { GlobalErrorIndicator } from '../components/GlobalErrorIndicator';
 import { SiteProvider } from '../components/SiteProvider';
@@ -42,6 +43,24 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
+
+  // 预先获取主题配置
+  let themeConfig = {
+    defaultTheme: 'default',
+    customCSS: '',
+    allowUserCustomization: true
+  };
+
+  try {
+    if (storageType !== 'localstorage') {
+      const adminConfig = await db.getAdminConfig();
+      if (adminConfig?.ThemeConfig) {
+        themeConfig = adminConfig.ThemeConfig;
+      }
+    }
+  } catch (error) {
+    console.error('服务端获取主题配置失败:', error);
+  }
 
   let siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'OrangeTV';
   let announcement =
@@ -94,6 +113,7 @@ export default async function RootLayout({
     CUSTOM_CATEGORIES: customCategories,
     FLUID_SEARCH: fluidSearch,
     REQUIRE_DEVICE_CODE: requireDeviceCode,
+    THEME_CONFIG: themeConfig,
   };
 
   return (
@@ -112,8 +132,60 @@ export default async function RootLayout({
           }}
         />
 
-        {/* 主题初始化脚本 - 立即执行避免主题闪烁 */}
-        <script src="/theme-init.js" />
+        {/* 主题初始化脚本 - 内联执行，确保在生产环境中立即应用主题 */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  console.log('开始初始化主题...');
+                  
+                  // 获取预设的主题配置
+                  const themeConfig = window.RUNTIME_CONFIG?.THEME_CONFIG || {
+                    defaultTheme: 'default',
+                    customCSS: ''
+                  };
+                  
+                  console.log('服务端主题配置:', themeConfig);
+                  
+                  // 应用主题函数
+                  function applyTheme(themeId, css) {
+                    const html = document.documentElement;
+                    
+                    // 移除所有主题属性
+                    html.removeAttribute('data-theme');
+                    
+                    // 应用主题
+                    if (themeId !== 'default') {
+                      html.setAttribute('data-theme', themeId);
+                    }
+                    
+                    // 应用自定义CSS
+                    if (css) {
+                      let customStyleEl = document.getElementById('custom-theme-css');
+                      if (!customStyleEl) {
+                        customStyleEl = document.createElement('style');
+                        customStyleEl.id = 'custom-theme-css';
+                        document.head.appendChild(customStyleEl);
+                      }
+                      customStyleEl.textContent = css;
+                    }
+                  }
+                  
+                  // 立即应用服务端主题配置
+                  applyTheme(themeConfig.defaultTheme, themeConfig.customCSS);
+                  console.log('主题已初始化:', themeConfig.defaultTheme);
+                  
+                } catch (error) {
+                  console.error('主题初始化失败:', error);
+                  // 失败时应用默认主题
+                  document.documentElement.removeAttribute('data-theme');
+                }
+              })();
+            `,
+          }}
+        />
       </head>
       <body
         className={`${inter.className} min-h-screen bg-white text-gray-900 dark:bg-black dark:text-gray-200`}

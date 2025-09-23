@@ -280,6 +280,18 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
   // 加载全局主题配置
   const loadGlobalThemeConfig = async () => {
     try {
+      // 优先使用运行时配置中的主题配置
+      const runtimeConfig = (window as any).RUNTIME_CONFIG;
+      const serverThemeConfig = runtimeConfig?.THEME_CONFIG;
+
+      if (serverThemeConfig) {
+        console.log('使用服务端预设的主题配置:', serverThemeConfig);
+        setGlobalThemeConfig(serverThemeConfig);
+        return serverThemeConfig;
+      }
+
+      // 如果没有服务端配置，则从API获取
+      console.log('服务端无主题配置，从API获取...');
       const response = await fetch('/api/theme');
       const result = await response.json();
       if (result.success) {
@@ -307,9 +319,17 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
       const result = await response.json();
       if (result.success) {
         setGlobalThemeConfig(result.data);
+
+        // 更新运行时配置，确保同步
+        const runtimeConfig = (window as any).RUNTIME_CONFIG;
+        if (runtimeConfig) {
+          runtimeConfig.THEME_CONFIG = result.data;
+          console.log('已更新运行时主题配置:', result.data);
+        }
+
         showAlert({
           type: 'success',
-          title: '全局主题配置已保存',
+          title: '全站主题配置已保存',
           message: '所有用户将使用新的主题配置',
           timer: 3000
         });
