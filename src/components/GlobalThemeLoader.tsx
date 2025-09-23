@@ -2,43 +2,86 @@
 
 import { useEffect } from 'react';
 
-// 全局主题加载器组件 - 作为服务端主题配置的同步和备份机制
+// 全局主题加载器组件 - 确保主题配置始终正确，优先信任服务端配置
 const GlobalThemeLoader = () => {
   useEffect(() => {
-    const syncGlobalTheme = async () => {
+    const validateAndSyncTheme = async () => {
       try {
-        // 检查是否已有服务端预设的主题配置
+        // 检查服务端预设的配置
         const runtimeConfig = (window as any).RUNTIME_CONFIG;
         const serverThemeConfig = runtimeConfig?.THEME_CONFIG;
 
-        console.log('检查服务端主题配置:', serverThemeConfig);
+        console.log('检查服务端预设主题配置:', serverThemeConfig);
 
-        if (serverThemeConfig) {
-          // 服务端已经应用了主题配置，检查是否需要同步更新
-          console.log('服务端主题配置已存在，无需重新加载');
+        if (serverThemeConfig && serverThemeConfig.defaultTheme !== 'default') {
+          // 服务端有非默认配置，优先使用服务端配置
+          console.log('使用服务端主题配置，跳过API检查:', serverThemeConfig);
+
+          // 确保服务端配置已正确应用到DOM
+          const html = document.documentElement;
+          const currentTheme = html.getAttribute('data-theme');
+
+          if (currentTheme !== serverThemeConfig.defaultTheme) {
+            console.log('DOM主题与服务端配置不一致，重新应用:', {
+              current: currentTheme,
+              expected: serverThemeConfig.defaultTheme
+            });
+            applyTheme(serverThemeConfig.defaultTheme, serverThemeConfig.customCSS || '');
+          } else {
+            console.log('服务端主题配置已正确应用，无需更新');
+          }
           return;
         }
 
-        // 如果没有服务端配置，则从API获取（备用方案）
-        console.log('未检测到服务端主题配置，尝试从API加载...');
+        // 只有当服务端配置为默认值时，才从API获取配置
+        console.log('服务端为默认配置，从API获取最新配置...');
         const response = await fetch('/api/theme');
         const result = await response.json();
 
         if (result.success && result.data) {
           const { defaultTheme, customCSS } = result.data;
-          console.log('从API获取到主题配置:', { defaultTheme, customCSS });
+          const isFallback = result.fallback;
 
-          // 应用从API获取的配置
-          applyTheme(defaultTheme, customCSS);
-          console.log('已应用API主题配置:', defaultTheme);
+          console.log('从API获取到主题配置:', {
+            defaultTheme,
+            customCSS,
+            isFallback: !!isFallback,
+            error: result.error
+          });
+
+          if (isFallback) {
+            console.log('API返回备用配置，保持服务端设置不变');
+            return;
+          }
+
+          // 只有API返回非默认配置且非备用配置时才应用
+          if (defaultTheme !== 'default' || customCSS) {
+            console.log('应用API获取的有效主题配置:', { defaultTheme, customCSS });
+            applyTheme(defaultTheme, customCSS);
+
+            // 更新运行时配置
+            if (runtimeConfig) {
+              runtimeConfig.THEME_CONFIG = { defaultTheme, customCSS, allowUserCustomization: true };
+            }
+          } else {
+            console.log('API返回默认配置，保持当前状态');
+          }
+        } else {
+          console.log('API获取失败，保持当前主题配置');
         }
       } catch (error) {
-        console.error('同步全站主题配置失败:', error);
-        // 失败时检查当前HTML状态，如果没有主题则应用默认
-        const html = document.documentElement;
-        if (!html.hasAttribute('data-theme')) {
+        console.error('主题配置验证失败:', error);
+
+        // 出错时优先使用服务端配置
+        const runtimeConfig = (window as any).RUNTIME_CONFIG;
+        const serverThemeConfig = runtimeConfig?.THEME_CONFIG;
+
+        if (serverThemeConfig) {
+          console.log('错误恢复：使用服务端配置:', serverThemeConfig);
+          applyTheme(serverThemeConfig.defaultTheme, serverThemeConfig.customCSS || '');
+        } else {
+          console.log('错误恢复：使用默认主题');
           applyTheme('default', '');
-          console.log('应用默认主题作为备用');
         }
       }
     };
@@ -65,9 +108,9 @@ const GlobalThemeLoader = () => {
       customStyleEl.textContent = css;
     };
 
-    // 稍作延迟，确保DOM完全加载后再同步
+    // 稍作延迟，确保DOM完全加载后再验证主题
     const timer = setTimeout(() => {
-      syncGlobalTheme();
+      validateAndSyncTheme();
     }, 100);
 
     return () => clearTimeout(timer);

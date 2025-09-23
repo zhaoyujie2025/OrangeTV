@@ -295,6 +295,9 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
       const response = await fetch('/api/theme');
       const result = await response.json();
       if (result.success) {
+        if (result.fallback) {
+          console.log('API返回备用配置，可能存在数据库访问问题');
+        }
         setGlobalThemeConfig(result.data);
         return result.data;
       }
@@ -326,6 +329,10 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
           runtimeConfig.THEME_CONFIG = result.data;
           console.log('已更新运行时主题配置:', result.data);
         }
+
+        // 立即应用新的主题配置，确保当前页面也能看到更改
+        applyTheme(result.data.defaultTheme, result.data.customCSS);
+        console.log('已立即应用新主题配置:', result.data.defaultTheme);
 
         showAlert({
           type: 'success',
@@ -500,6 +507,16 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
         customCSS: '',
         allowUserCustomization: globalThemeConfig?.allowUserCustomization ?? true,
       });
+
+      // 更新运行时配置
+      const runtimeConfig = (window as any).RUNTIME_CONFIG;
+      if (runtimeConfig) {
+        runtimeConfig.THEME_CONFIG = {
+          defaultTheme: currentTheme,
+          customCSS: '',
+          allowUserCustomization: globalThemeConfig?.allowUserCustomization ?? true,
+        };
+      }
     }
 
     showAlert({

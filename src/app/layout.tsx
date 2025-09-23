@@ -55,11 +55,20 @@ export default async function RootLayout({
     if (storageType !== 'localstorage') {
       const adminConfig = await db.getAdminConfig();
       if (adminConfig?.ThemeConfig) {
-        themeConfig = adminConfig.ThemeConfig;
+        themeConfig = {
+          defaultTheme: adminConfig.ThemeConfig.defaultTheme || 'default',
+          customCSS: adminConfig.ThemeConfig.customCSS || '',
+          allowUserCustomization: adminConfig.ThemeConfig.allowUserCustomization !== false,
+        };
+        console.log('服务端获取主题配置成功:', themeConfig);
+      } else {
+        console.log('服务端配置中没有主题配置，使用默认配置');
       }
+    } else {
+      console.log('LocalStorage模式，使用默认主题配置');
     }
   } catch (error) {
-    console.error('服务端获取主题配置失败:', error);
+    console.error('服务端获取主题配置失败，使用默认配置:', error);
   }
 
   let siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'OrangeTV';
@@ -141,46 +150,70 @@ export default async function RootLayout({
                 try {
                   console.log('开始初始化主题...');
                   
+                  // 应用主题函数
+                  function applyTheme(themeId, css) {
+                    try {
+                      const html = document.documentElement;
+                      
+                      // 移除所有主题属性
+                      html.removeAttribute('data-theme');
+                      
+                      // 应用主题
+                      if (themeId && themeId !== 'default') {
+                        html.setAttribute('data-theme', themeId);
+                      }
+                      
+                      // 应用自定义CSS
+                      if (css) {
+                        let customStyleEl = document.getElementById('custom-theme-css');
+                        if (!customStyleEl) {
+                          customStyleEl = document.createElement('style');
+                          customStyleEl.id = 'custom-theme-css';
+                          document.head.appendChild(customStyleEl);
+                        }
+                        customStyleEl.textContent = css;
+                      }
+                      return true;
+                    } catch (e) {
+                      console.error('应用主题失败:', e);
+                      return false;
+                    }
+                  }
+                  
                   // 获取预设的主题配置
-                  const themeConfig = window.RUNTIME_CONFIG?.THEME_CONFIG || {
+                  let themeConfig = {
                     defaultTheme: 'default',
                     customCSS: ''
                   };
                   
-                  console.log('服务端主题配置:', themeConfig);
-                  
-                  // 应用主题函数
-                  function applyTheme(themeId, css) {
-                    const html = document.documentElement;
-                    
-                    // 移除所有主题属性
-                    html.removeAttribute('data-theme');
-                    
-                    // 应用主题
-                    if (themeId !== 'default') {
-                      html.setAttribute('data-theme', themeId);
+                  try {
+                    if (window.RUNTIME_CONFIG && window.RUNTIME_CONFIG.THEME_CONFIG) {
+                      themeConfig = window.RUNTIME_CONFIG.THEME_CONFIG;
+                      console.log('使用服务端主题配置:', themeConfig);
+                    } else {
+                      console.log('未找到服务端主题配置，使用默认配置');
                     }
-                    
-                    // 应用自定义CSS
-                    if (css) {
-                      let customStyleEl = document.getElementById('custom-theme-css');
-                      if (!customStyleEl) {
-                        customStyleEl = document.createElement('style');
-                        customStyleEl.id = 'custom-theme-css';
-                        document.head.appendChild(customStyleEl);
-                      }
-                      customStyleEl.textContent = css;
-                    }
+                  } catch (e) {
+                    console.warn('获取服务端主题配置失败:', e);
                   }
                   
-                  // 立即应用服务端主题配置
-                  applyTheme(themeConfig.defaultTheme, themeConfig.customCSS);
-                  console.log('主题已初始化:', themeConfig.defaultTheme);
+                  // 立即应用主题配置
+                  const success = applyTheme(themeConfig.defaultTheme, themeConfig.customCSS);
+                  if (success) {
+                    console.log('主题已初始化:', themeConfig.defaultTheme);
+                  } else {
+                    console.log('主题初始化失败，将等待客户端重新加载');
+                  }
                   
                 } catch (error) {
-                  console.error('主题初始化失败:', error);
-                  // 失败时应用默认主题
-                  document.documentElement.removeAttribute('data-theme');
+                  console.error('主题初始化过程失败:', error);
+                  // 最终备用方案：确保HTML至少没有错误的主题属性
+                  try {
+                    document.documentElement.removeAttribute('data-theme');
+                    console.log('已清除主题属性作为备用方案');
+                  } catch (e) {
+                    console.error('连备用方案也失败了:', e);
+                  }
                 }
               })();
             `,
