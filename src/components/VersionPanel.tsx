@@ -81,16 +81,24 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
   const fetchRemoteChangelog = async () => {
     try {
       const response = await fetch(
-        'https://raw.githubusercontent.com/MoonTechLab/LunaTV/main/CHANGELOG'
+        'https://raw.githubusercontent.com/djteang/OrangeTV/refs/heads/main/CHANGELOG'
       );
       if (response.ok) {
         const content = await response.text();
         const parsed = parseChangelog(content);
         setRemoteChangelog(parsed);
 
-        // 检查是否有更新
+        // 检查是否有更新 - 基于日期而非版本号数字大小来确定最新版本
         if (parsed.length > 0) {
-          const latest = parsed[0];
+          // 按日期排序，找到真正的最新版本
+          const sortedByDate = [...parsed].sort((a, b) => {
+            // 解析日期进行比较
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            return dateB.getTime() - dateA.getTime(); // 降序排列，最新的在前
+          });
+
+          const latest = sortedByDate[0];
           setLatestVersion(latest.version);
           setIsHasUpdate(
             compareVersions(latest.version) === UpdateStatus.HAS_UPDATE
@@ -363,7 +371,7 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
                     </div>
                   </div>
                   <a
-                    href='https://github.com/MoonTechLab/LunaTV'
+                    href='https://github.com/djteang/OrangeTV'
                     target='_blank'
                     rel='noopener noreferrer'
                     className='inline-flex items-center justify-center gap-2 px-3 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-xs sm:text-sm rounded-lg transition-colors shadow-sm w-full'
@@ -440,6 +448,12 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
                           (local) => local.version
                         );
                         return !localVersions.includes(entry.version);
+                      })
+                      .sort((a, b) => {
+                        // 按日期排序，确保最新的版本在前面显示
+                        const dateA = new Date(a.date);
+                        const dateB = new Date(b.date);
+                        return dateB.getTime() - dateA.getTime(); // 降序排列，最新的在前
                       })
                       .map((entry, index) => (
                         <div

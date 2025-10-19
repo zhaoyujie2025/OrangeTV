@@ -36,6 +36,1294 @@
 
 :root {
   --foreground-rgb: 255, 255, 255;
+  
+  /* 默认主题（当前蓝色系主题） */
+  --color-primary-50: 240, 249, 255;
+  --color-primary-100: 224, 242, 254;
+  --color-primary-200: 186, 230, 253;
+  --color-primary-300: 125, 211, 252;
+  --color-primary-400: 56, 189, 248;
+  --color-primary-500: 14, 165, 233;
+  --color-primary-600: 2, 132, 199;
+  --color-primary-700: 3, 105, 161;
+  --color-primary-800: 7, 89, 133;
+  --color-primary-900: 12, 74, 110;
+  --color-dark: 34, 34, 34;
+  
+  /* 主题颜色变量（默认使用蓝色系） */
+  --color-theme-bg: 255, 255, 255;
+  --color-theme-surface: 249, 250, 251;
+  --color-theme-accent: 14, 165, 233;
+  --color-theme-text: 17, 24, 39;
+  --color-theme-text-secondary: 107, 114, 128;
+  --color-theme-border: 229, 231, 235;
+  --color-theme-success: 34, 197, 94;
+  --color-theme-warning: 245, 158, 11;
+  --color-theme-error: 239, 68, 68;
+  --color-theme-info: 59, 130, 246;
+}
+
+.dark {
+  /* 默认深色主题 */
+  --color-theme-bg: 17, 24, 39;
+  --color-theme-surface: 31, 41, 55;
+  --color-theme-accent: 56, 189, 248;
+  --color-theme-text: 243, 244, 246;
+  --color-theme-text-secondary: 156, 163, 175;
+  --color-theme-border: 75, 85, 99;
+  --color-theme-success: 74, 222, 128;
+  --color-theme-warning: 251, 191, 36;
+  --color-theme-error: 248, 113, 113;
+  --color-theme-info: 96, 165, 250;
+}
+
+/* 视频卡片播放按钮hover填充颜色适配 */
+
+/* 极简主题视频卡片播放按钮适配 */
+[data-theme="minimal"] .hover\:fill-blue-500:hover {
+  fill: rgb(82, 82, 82) !important;
+}
+
+[data-theme="minimal"].dark .hover\:fill-blue-500:hover {
+  fill: rgb(163, 163, 163) !important;
+}
+
+/* 暖色主题视频卡片播放按钮适配 */
+[data-theme="warm"] .hover\:fill-blue-500:hover {
+  fill: rgb(234, 88, 12) !important;
+}
+
+[data-theme="warm"].dark .hover\:fill-blue-500:hover {
+  fill: rgb(251, 146, 60) !important;
+}
+
+/* 视频卡片hover时资源名称和视频名称适配 */
+
+/* 极简主题视频卡片文字适配 */
+[data-theme="minimal"] .group-hover\:text-blue-600:hover,
+[data-theme="minimal"] .group:hover .group-hover\:text-blue-600 {
+  color: rgb(64, 64, 64) !important;
+}
+[data-theme="minimal"] .group-hover\:text-blue-400:hover,
+[data-theme="minimal"] .group:hover .group-hover\:text-blue-400 {
+  color: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"] .group-hover\:border-blue-500\/60:hover,
+[data-theme="minimal"] .group:hover .group-hover\:border-blue-500\/60 {
+  border-color: rgb(82, 82, 82, 0.6) !important;
+}
+
+[data-theme="minimal"].dark .group-hover\:text-blue-600:hover,
+[data-theme="minimal"].dark .group:hover .group-hover\:text-blue-600 {
+  color: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"].dark .group-hover\:text-blue-400:hover,
+[data-theme="minimal"].dark .group:hover .group-hover\:text-blue-400 {
+  color: rgb(163, 163, 163) !important;
+}
+
+/* 暖色主题视频卡片文字适配 */
+[data-theme="warm"] .group-hover\:text-blue-600:hover,
+[data-theme="warm"] .group:hover .group-hover\:text-blue-600 {
+  color: rgb(194, 65, 12) !important;
+}
+[data-theme="warm"] .group-hover\:text-blue-400:hover,
+[data-theme="warm"] .group:hover .group-hover\:text-blue-400 {
+  color: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"] .group-hover\:border-blue-500\/60:hover,
+[data-theme="warm"] .group:hover .group-hover\:border-blue-500\/60 {
+  border-color: rgb(234, 88, 12, 0.6) !important;
+}
+
+[data-theme="warm"].dark .group-hover\:text-blue-600:hover,
+[data-theme="warm"].dark .group:hover .group-hover\:text-blue-600 {
+  color: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .group-hover\:text-blue-400:hover,
+[data-theme="warm"].dark .group:hover .group-hover\:text-blue-400 {
+  color: rgb(251, 146, 60) !important;
+}
+
+/* 清新主题视频卡片文字适配 */
+[data-theme="fresh"] .group-hover\:text-blue-600:hover,
+[data-theme="fresh"] .group:hover .group-hover\:text-blue-600 {
+  color: rgb(22, 163, 74) !important;
+}
+[data-theme="fresh"] .group-hover\:text-blue-400:hover,
+[data-theme="fresh"] .group:hover .group-hover\:text-blue-400 {
+  color: rgb(22, 163, 74) !important;
+}
+[data-theme="fresh"] .group-hover\:border-blue-500\/60:hover,
+[data-theme="fresh"] .group:hover .group-hover\:border-blue-500\/60 {
+  border-color: rgb(63, 204, 113, 0.6) !important;
+}
+
+[data-theme="fresh"].dark .group-hover\:text-blue-600:hover,
+[data-theme="fresh"].dark .group:hover .group-hover\:text-blue-600 {
+  color: rgb(74, 222, 128) !important;
+}
+[data-theme="fresh"].dark .group-hover\:text-blue-400:hover,
+[data-theme="fresh"].dark .group:hover .group-hover\:text-blue-400 {
+  color: rgb(74, 222, 128) !important;
+}
+
+/* 侧边栏hover颜色适配 */
+
+/* 极简主题侧边栏适配 */
+[data-theme="minimal"] .hover\:text-blue-600:hover {
+  color: rgb(82, 82, 82) !important;
+}
+[data-theme="minimal"] .hover\:text-blue-700:hover {
+  color: rgb(64, 64, 64) !important;
+}
+[data-theme="minimal"] .group-hover\:text-blue-600:hover,
+[data-theme="minimal"] .group:hover .group-hover\:text-blue-600 {
+  color: rgb(82, 82, 82) !important;
+}
+[data-theme="minimal"] .group-data-\[active\=true\]\:text-blue-700,
+[data-theme="minimal"] .group[data-active="true"] .group-data-\[active\=true\]\:text-blue-700 {
+  color: rgb(64, 64, 64) !important;
+}
+[data-theme="minimal"] .data-\[active\=true\]\:text-blue-700[data-active="true"] {
+  color: rgb(64, 64, 64) !important;
+}
+[data-theme="minimal"] .data-\[active\=true\]\:bg-blue-500\/20[data-active="true"] {
+  background-color: rgb(82, 82, 82, 0.2) !important;
+}
+
+[data-theme="minimal"].dark .hover\:text-blue-400:hover {
+  color: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"].dark .hover\:text-blue-300:hover {
+  color: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"].dark .group-hover\:text-blue-400:hover,
+[data-theme="minimal"].dark .group:hover .group-hover\:text-blue-400 {
+  color: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"].dark .group-data-\[active\=true\]\:text-blue-400,
+[data-theme="minimal"].dark .group[data-active="true"] .group-data-\[active\=true\]\:text-blue-400 {
+  color: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"].dark .data-\[active\=true\]\:text-blue-400[data-active="true"] {
+  color: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"].dark .data-\[active\=true\]\:bg-blue-500\/10[data-active="true"] {
+  background-color: rgb(163, 163, 163, 0.1) !important;
+}
+
+/* 暖色主题侧边栏适配 */
+[data-theme="warm"] .hover\:text-blue-600:hover {
+  color: rgb(234, 88, 12) !important;
+}
+[data-theme="warm"] .hover\:text-blue-700:hover {
+  color: rgb(194, 65, 12) !important;
+}
+[data-theme="warm"] .group-hover\:text-blue-600:hover,
+[data-theme="warm"] .group:hover .group-hover\:text-blue-600 {
+  color: rgb(234, 88, 12) !important;
+}
+[data-theme="warm"] .group-data-\[active\=true\]\:text-blue-700,
+[data-theme="warm"] .group[data-active="true"] .group-data-\[active\=true\]\:text-blue-700 {
+  color: rgb(194, 65, 12) !important;
+}
+[data-theme="warm"] .data-\[active\=true\]\:text-blue-700[data-active="true"] {
+  color: rgb(194, 65, 12) !important;
+}
+[data-theme="warm"] .data-\[active\=true\]\:bg-blue-500\/20[data-active="true"] {
+  background-color: rgb(234, 88, 12, 0.2) !important;
+}
+
+[data-theme="warm"].dark .hover\:text-blue-400:hover {
+  color: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .hover\:text-blue-300:hover {
+  color: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .group-hover\:text-blue-400:hover,
+[data-theme="warm"].dark .group:hover .group-hover\:text-blue-400 {
+  color: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .group-data-\[active\=true\]\:text-blue-400,
+[data-theme="warm"].dark .group[data-active="true"] .group-data-\[active\=true\]\:text-blue-400 {
+  color: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .data-\[active\=true\]\:text-blue-400[data-active="true"] {
+  color: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .data-\[active\=true\]\:bg-blue-500\/10[data-active="true"] {
+  background-color: rgb(251, 146, 60, 0.1) !important;
+}
+
+/* 搜索页面聚焦状态和加载元素适配 */
+
+/* 极简主题搜索页面适配 */
+[data-theme="minimal"] .focus\:ring-blue-400:focus {
+  box-shadow: 0 0 0 3px rgb(115, 115, 115, 0.5) !important;
+}
+[data-theme="minimal"] .focus\:ring-blue-400\/50:focus {
+  box-shadow: 0 0 0 3px rgb(115, 115, 115, 0.25) !important;
+}
+[data-theme="minimal"] .border-t-blue-500 {
+  border-top-color: rgb(115, 115, 115) !important;
+}
+[data-theme="minimal"] .border-b-2.border-blue-500 {
+  border-bottom-color: rgb(115, 115, 115) !important;
+}
+[data-theme="minimal"] .hover\:shadow-blue-500\/50:hover {
+  box-shadow: 0 25px 50px -12px rgb(115, 115, 115, 0.5) !important;
+}
+
+[data-theme="minimal"].dark .focus\:ring-blue-400:focus {
+  box-shadow: 0 0 0 3px rgb(163, 163, 163, 0.5) !important;
+}
+[data-theme="minimal"].dark .focus\:ring-blue-400\/50:focus {
+  box-shadow: 0 0 0 3px rgb(163, 163, 163, 0.25) !important;
+}
+[data-theme="minimal"].dark .border-t-blue-500 {
+  border-top-color: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"].dark .border-b-2.border-blue-500 {
+  border-bottom-color: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"].dark .hover\:shadow-blue-500\/50:hover {
+  box-shadow: 0 25px 50px -12px rgb(163, 163, 163, 0.5) !important;
+}
+
+/* 暖色主题搜索页面适配 */
+[data-theme="warm"] .focus\:ring-blue-400:focus {
+  box-shadow: 0 0 0 3px rgb(249, 115, 22, 0.5) !important;
+}
+[data-theme="warm"] .focus\:ring-blue-400\/50:focus {
+  box-shadow: 0 0 0 3px rgb(249, 115, 22, 0.25) !important;
+}
+[data-theme="warm"] .border-t-blue-500 {
+  border-top-color: rgb(249, 115, 22) !important;
+}
+[data-theme="warm"] .border-b-2.border-blue-500 {
+  border-bottom-color: rgb(249, 115, 22) !important;
+}
+[data-theme="warm"] .hover\:shadow-blue-500\/50:hover {
+  box-shadow: 0 25px 50px -12px rgb(249, 115, 22, 0.5) !important;
+}
+
+[data-theme="warm"].dark .focus\:ring-blue-400:focus {
+  box-shadow: 0 0 0 3px rgb(251, 146, 60, 0.5) !important;
+}
+[data-theme="warm"].dark .focus\:ring-blue-400\/50:focus {
+  box-shadow: 0 0 0 3px rgb(251, 146, 60, 0.25) !important;
+}
+[data-theme="warm"].dark .border-t-blue-500 {
+  border-top-color: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .border-b-2.border-blue-500 {
+  border-bottom-color: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .hover\:shadow-blue-500\/50:hover {
+  box-shadow: 0 25px 50px -12px rgb(251, 146, 60, 0.5) !important;
+}
+
+/* 播放页视频加载元素适配 */
+
+/* 极简主题播放页加载适配 */
+[data-theme="minimal"] .from-blue-500 {
+  --tw-gradient-from: rgb(115, 115, 115) !important;
+}
+[data-theme="minimal"] .to-blue-600 {
+  --tw-gradient-to: rgb(82, 82, 82) !important;
+}
+
+[data-theme="minimal"].dark .from-blue-500 {
+  --tw-gradient-from: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"].dark .to-blue-600 {
+  --tw-gradient-to: rgb(212, 212, 212) !important;
+}
+
+/* 暖色主题播放页加载适配 */
+[data-theme="warm"] .from-blue-500 {
+  --tw-gradient-from: rgb(249, 115, 22) !important;
+}
+[data-theme="warm"] .to-blue-600 {
+  --tw-gradient-to: rgb(234, 88, 12) !important;
+}
+
+[data-theme="warm"].dark .from-blue-500 {
+  --tw-gradient-from: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .to-blue-600 {
+  --tw-gradient-to: rgb(253, 186, 116) !important;
+}
+
+/* 清新主题搜索页面适配 */
+[data-theme="fresh"] .focus\:ring-blue-400:focus {
+  box-shadow: 0 0 0 3px rgb(63, 204, 113, 0.5) !important;
+}
+[data-theme="fresh"] .focus\:ring-blue-400\/50:focus {
+  box-shadow: 0 0 0 3px rgb(63, 204, 113, 0.25) !important;
+}
+[data-theme="fresh"] .border-t-blue-500 {
+  border-top-color: rgb(63, 204, 113) !important;
+}
+[data-theme="fresh"] .border-b-2.border-blue-500 {
+  border-bottom-color: rgb(63, 204, 113) !important;
+}
+[data-theme="fresh"] .hover\:shadow-blue-500\/50:hover {
+  box-shadow: 0 25px 50px -12px rgb(63, 204, 113, 0.5) !important;
+}
+
+[data-theme="fresh"].dark .focus\:ring-blue-400:focus {
+  box-shadow: 0 0 0 3px rgb(74, 222, 128, 0.5) !important;
+}
+[data-theme="fresh"].dark .focus\:ring-blue-400\/50:focus {
+  box-shadow: 0 0 0 3px rgb(74, 222, 128, 0.25) !important;
+}
+[data-theme="fresh"].dark .border-t-blue-500 {
+  border-top-color: rgb(74, 222, 128) !important;
+}
+[data-theme="fresh"].dark .border-b-2.border-blue-500 {
+  border-bottom-color: rgb(74, 222, 128) !important;
+}
+[data-theme="fresh"].dark .hover\:shadow-blue-500\/50:hover {
+  box-shadow: 0 25px 50px -12px rgb(74, 222, 128, 0.5) !important;
+}
+
+/* 清新主题播放页加载适配 */
+[data-theme="fresh"] .from-blue-500 {
+  --tw-gradient-from: rgb(63, 204, 113) !important;
+}
+[data-theme="fresh"] .to-blue-600 {
+  --tw-gradient-to: rgb(22, 163, 74) !important;
+}
+
+[data-theme="fresh"].dark .from-blue-500 {
+  --tw-gradient-from: rgb(74, 222, 128) !important;
+}
+[data-theme="fresh"].dark .to-blue-600 {
+  --tw-gradient-to: rgb(134, 239, 172) !important;
+}
+
+/* 极简主题 */
+[data-theme="minimal"] {
+  --color-primary-50: 250, 250, 250;
+  --color-primary-100: 245, 245, 245;
+  --color-primary-200: 229, 229, 229;
+  --color-primary-300: 212, 212, 212;
+  --color-primary-400: 163, 163, 163;
+  --color-primary-500: 115, 115, 115;
+  --color-primary-600: 82, 82, 82;
+  --color-primary-700: 64, 64, 64;
+  --color-primary-800: 38, 38, 38;
+  --color-primary-900: 23, 23, 23;
+  
+  --color-theme-bg: 255, 255, 255;
+  --color-theme-surface: 252, 252, 252;
+  --color-theme-accent: 82, 82, 82;
+  --color-theme-text: 23, 23, 23;
+  --color-theme-text-secondary: 115, 115, 115;
+  --color-theme-border: 229, 229, 229;
+  --color-theme-success: 34, 197, 94;
+  --color-theme-warning: 245, 158, 11;
+  --color-theme-error: 239, 68, 68;
+  --color-theme-info: 115, 115, 115;
+}
+
+/* 极简主题蓝色元素覆盖 */
+[data-theme="minimal"] .text-blue-600 {
+  color: rgb(82, 82, 82) !important;
+}
+[data-theme="minimal"] .text-blue-700 {
+  color: rgb(64, 64, 64) !important;
+}
+[data-theme="minimal"] .text-blue-400 {
+  color: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"] .bg-blue-500\/20 {
+  background-color: rgb(82, 82, 82, 0.2) !important;
+}
+[data-theme="minimal"] .bg-blue-500\/10 {
+  background-color: rgb(82, 82, 82, 0.1) !important;
+}
+[data-theme="minimal"] .bg-blue-500 {
+  background-color: rgb(82, 82, 82) !important;
+}
+[data-theme="minimal"] .fill-blue-500,
+[data-theme="minimal"] .hover\\:fill-blue-500:hover {
+  fill: rgb(82, 82, 82) !important;
+}
+[data-theme="minimal"] .border-blue-500\/30 {
+  border-color: rgb(82, 82, 82, 0.3) !important;
+}
+[data-theme="minimal"] .hover\\:text-blue-600:hover {
+  color: rgb(82, 82, 82) !important;
+}
+[data-theme="minimal"] .bg-blue-100 {
+  background-color: rgb(245, 245, 245) !important;
+}
+[data-theme="minimal"] .text-blue-800 {
+  color: rgb(38, 38, 38) !important;
+}
+[data-theme="minimal"] .hover\\:bg-blue-200:hover {
+  background-color: rgb(229, 229, 229) !important;
+}
+
+[data-theme="minimal"].dark {
+  --color-theme-bg: 18, 18, 18;
+  --color-theme-surface: 28, 28, 28;
+  --color-theme-accent: 163, 163, 163;
+  --color-theme-text: 250, 250, 250;
+  --color-theme-text-secondary: 163, 163, 163;
+  --color-theme-border: 64, 64, 64;
+  --color-theme-success: 74, 222, 128;
+  --color-theme-warning: 251, 191, 36;
+  --color-theme-error: 248, 113, 113;
+  --color-theme-info: 163, 163, 163;
+}
+
+/* 极简主题深色模式蓝色元素覆盖 */
+[data-theme="minimal"].dark .text-blue-600 {
+  color: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"].dark .text-blue-700 {
+  color: rgb(212, 212, 212) !important;
+}
+[data-theme="minimal"].dark .text-blue-400 {
+  color: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"].dark .bg-blue-500\/20 {
+  background-color: rgb(163, 163, 163, 0.2) !important;
+}
+[data-theme="minimal"].dark .bg-blue-500\/10 {
+  background-color: rgb(163, 163, 163, 0.1) !important;
+}
+[data-theme="minimal"].dark .bg-blue-500 {
+  background-color: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"].dark .fill-blue-500,
+[data-theme="minimal"].dark .hover\\:fill-blue-500:hover {
+  fill: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"].dark .border-blue-500\/30 {
+  border-color: rgb(163, 163, 163, 0.3) !important;
+}
+[data-theme="minimal"].dark .hover\\:text-blue-400:hover {
+  color: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"].dark .bg-blue-900\/40 {
+  background-color: rgb(38, 38, 38, 0.4) !important;
+}
+[data-theme="minimal"].dark .hover\\:bg-blue-900\/60:hover {
+  background-color: rgb(38, 38, 38, 0.6) !important;
+}
+[data-theme="minimal"].dark .text-blue-200 {
+  color: rgb(212, 212, 212) !important;
+}
+
+/* 暖色主题 */
+[data-theme="warm"] {
+  --color-primary-50: 255, 247, 237;
+  --color-primary-100: 255, 237, 213;
+  --color-primary-200: 254, 215, 170;
+  --color-primary-300: 253, 186, 116;
+  --color-primary-400: 251, 146, 60;
+  --color-primary-500: 249, 115, 22;
+  --color-primary-600: 234, 88, 12;
+  --color-primary-700: 194, 65, 12;
+  --color-primary-800: 154, 52, 18;
+  --color-primary-900: 124, 45, 18;
+  
+  --color-theme-bg: 255, 253, 247;
+  --color-theme-surface: 254, 250, 240;
+  --color-theme-accent: 234, 88, 12;
+  --color-theme-text: 124, 45, 18;
+  --color-theme-text-secondary: 154, 52, 18;
+  --color-theme-border: 253, 230, 138;
+  --color-theme-success: 22, 163, 74;
+  --color-theme-warning: 217, 119, 6;
+  --color-theme-error: 220, 38, 38;
+  --color-theme-info: 194, 65, 12;
+}
+
+/* 暖色主题蓝色元素覆盖 */
+[data-theme="warm"] .text-blue-600 {
+  color: rgb(234, 88, 12) !important;
+}
+[data-theme="warm"] .text-blue-700 {
+  color: rgb(194, 65, 12) !important;
+}
+[data-theme="warm"] .text-blue-400 {
+  color: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"] .bg-blue-500\/20 {
+  background-color: rgb(234, 88, 12, 0.2) !important;
+}
+[data-theme="warm"] .bg-blue-500\/10 {
+  background-color: rgb(234, 88, 12, 0.1) !important;
+}
+[data-theme="warm"] .bg-blue-500 {
+  background-color: rgb(234, 88, 12) !important;
+}
+[data-theme="warm"] .fill-blue-500,
+[data-theme="warm"] .hover\\:fill-blue-500:hover {
+  fill: rgb(234, 88, 12) !important;
+}
+[data-theme="warm"] .border-blue-500\/30 {
+  border-color: rgb(234, 88, 12, 0.3) !important;
+}
+[data-theme="warm"] .hover\\:text-blue-600:hover {
+  color: rgb(234, 88, 12) !important;
+}
+[data-theme="warm"] .bg-blue-100 {
+  background-color: rgb(255, 237, 213) !important;
+}
+[data-theme="warm"] .text-blue-800 {
+  color: rgb(154, 52, 18) !important;
+}
+[data-theme="warm"] .hover\\:bg-blue-200:hover {
+  background-color: rgb(254, 215, 170) !important;
+}
+
+[data-theme="warm"].dark {
+  --color-theme-bg: 28, 25, 23;
+  --color-theme-surface: 41, 37, 36;
+  --color-theme-accent: 251, 146, 60;
+  --color-theme-text: 254, 243, 199;
+  --color-theme-text-secondary: 214, 158, 46;
+  --color-theme-border: 87, 83, 78;
+  --color-theme-success: 74, 222, 128;
+  --color-theme-warning: 251, 191, 36;
+  --color-theme-error: 248, 113, 113;
+  --color-theme-info: 251, 146, 60;
+}
+
+/* 暖色主题深色模式蓝色元素覆盖 */
+[data-theme="warm"].dark .text-blue-600 {
+  color: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .text-blue-700 {
+  color: rgb(253, 186, 116) !important;
+}
+[data-theme="warm"].dark .text-blue-400 {
+  color: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .bg-blue-500\/20 {
+  background-color: rgb(251, 146, 60, 0.2) !important;
+}
+[data-theme="warm"].dark .bg-blue-500\/10 {
+  background-color: rgb(251, 146, 60, 0.1) !important;
+}
+[data-theme="warm"].dark .bg-blue-500 {
+  background-color: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .fill-blue-500,
+[data-theme="warm"].dark .hover\\:fill-blue-500:hover {
+  fill: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .border-blue-500\/30 {
+  border-color: rgb(251, 146, 60, 0.3) !important;
+}
+[data-theme="warm"].dark .hover\\:text-blue-400:hover {
+  color: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .bg-blue-900\/40 {
+  background-color: rgb(154, 52, 18, 0.4) !important;
+}
+[data-theme="warm"].dark .hover\\:bg-blue-900\/60:hover {
+  background-color: rgb(154, 52, 18, 0.6) !important;
+}
+[data-theme="warm"].dark .text-blue-200 {
+  color: rgb(253, 186, 116) !important;
+}
+
+/* 通用蓝色样式覆盖 - 用于其他可能的蓝色元素 */
+
+/* 清新主题 */
+[data-theme="fresh"] {
+  --color-primary-50: 240, 253, 244;
+  --color-primary-100: 220, 252, 231;
+  --color-primary-200: 187, 247, 208;
+  --color-primary-300: 134, 239, 172;
+  --color-primary-400: 74, 222, 128;
+  --color-primary-500: 63, 204, 113;
+  --color-primary-600: 22, 163, 74;
+  --color-primary-700: 21, 128, 61;
+  --color-primary-800: 22, 101, 52;
+  --color-primary-900: 20, 83, 45;
+  
+  --color-theme-bg: 247, 253, 249;
+  --color-theme-surface: 240, 253, 244;
+  --color-theme-accent: 63, 204, 113;
+  --color-theme-text: 20, 83, 45;
+  --color-theme-text-secondary: 22, 101, 52;
+  --color-theme-border: 187, 247, 208;
+  --color-theme-success: 34, 197, 94;
+  --color-theme-warning: 245, 158, 11;
+  --color-theme-error: 239, 68, 68;
+  --color-theme-info: 63, 204, 113;
+}
+
+/* 清新主题蓝色元素覆盖 */
+/* 注意：移除了通用的 .text-blue-* 覆盖，只保留有条件的状态覆盖 */
+[data-theme="fresh"] .bg-blue-500\/20 {
+  background-color: rgb(63, 204, 113, 0.2) !important;
+}
+[data-theme="fresh"] .bg-blue-500\/10 {
+  background-color: rgb(63, 204, 113, 0.1) !important;
+}
+[data-theme="fresh"] .bg-blue-500 {
+  background-color: rgb(63, 204, 113) !important;
+}
+[data-theme="fresh"] .hover\:fill-blue-500:hover {
+  fill: rgb(63, 204, 113) !important;
+}
+[data-theme="fresh"] .border-blue-500\/30 {
+  border-color: rgb(63, 204, 113, 0.3) !important;
+}
+[data-theme="fresh"] .hover\:text-blue-600:hover {
+  color: rgb(22, 163, 74) !important;
+}
+[data-theme="fresh"] .bg-blue-100 {
+  background-color: rgb(220, 252, 231) !important;
+}
+/* 注意：移除了 .text-blue-800 的通用覆盖 */
+[data-theme="fresh"] .hover\:bg-blue-200:hover {
+  background-color: rgb(187, 247, 208) !important;
+}
+[data-theme="fresh"] .border-blue-200 {
+  border-color: rgb(187, 247, 208) !important;
+}
+[data-theme="fresh"] .border-blue-300 {
+  border-color: rgb(134, 239, 172) !important;
+}
+[data-theme="fresh"] .border-blue-500 {
+  border-color: rgb(63, 204, 113) !important;
+}
+[data-theme="fresh"] .bg-blue-600 {
+  background-color: rgb(22, 163, 74) !important;
+}
+[data-theme="fresh"] .hover\:bg-blue-600:hover {
+  background-color: rgb(21, 128, 61) !important;
+}
+[data-theme="fresh"] .hover\:bg-blue-700:hover {
+  background-color: rgb(21, 128, 61) !important;
+}
+[data-theme="fresh"] .focus\:ring-blue-500:focus {
+  box-shadow: 0 0 0 3px rgb(63, 204, 113, 0.1) !important;
+}
+/* 版本面板和品牌元素适配 */
+[data-theme="fresh"] .bg-blue-100 {
+  background-color: rgb(220, 252, 231) !important;
+}
+[data-theme="fresh"] .text-blue-800 {
+  color: rgb(22, 101, 52) !important;
+}
+[data-theme="fresh"] .text-blue-700 {
+  color: rgb(21, 128, 61) !important;
+}
+[data-theme="fresh"] .text-blue-600 {
+  color: rgb(22, 163, 74) !important;
+}
+[data-theme="fresh"] .text-blue-500 {
+  color: rgb(34, 197, 94) !important;
+}
+/* 登录页面和按钮适配 */
+[data-theme="fresh"] .bg-blue-600 {
+  background-color: rgb(22, 163, 74) !important;
+}
+[data-theme="fresh"] .focus\:ring-blue-500:focus {
+  --tw-ring-color: rgb(34, 197, 94) !important;
+}
+[data-theme="fresh"] .bg-blue-50 {
+  background-color: rgb(240, 253, 244) !important;
+}
+[data-theme="fresh"] .border-blue-200 {
+  border-color: rgb(187, 247, 208) !important;
+}
+[data-theme="fresh"] .peer-focus\:text-blue-600:focus {
+  color: rgb(22, 163, 74) !important;
+}
+[data-theme="fresh"] .peer:focus ~ .peer-focus\:text-blue-600 {
+  color: rgb(22, 163, 74) !important;
+}
+
+[data-theme="fresh"].dark {
+  --color-theme-bg: 20, 29, 24;
+  --color-theme-surface: 31, 41, 35;
+  --color-theme-accent: 74, 222, 128;
+  --color-theme-text: 240, 253, 244;
+  --color-theme-text-secondary: 187, 247, 208;
+  --color-theme-border: 75, 85, 79;
+  --color-theme-success: 74, 222, 128;
+  --color-theme-warning: 251, 191, 36;
+  --color-theme-error: 248, 113, 113;
+  --color-theme-info: 74, 222, 128;
+}
+
+/* 清新主题深色模式蓝色元素覆盖 */
+/* 注意：移除了通用的 .text-blue-* 覆盖，只保留有条件的状态覆盖 */
+[data-theme="fresh"].dark .bg-blue-500\/20 {
+  background-color: rgb(74, 222, 128, 0.2) !important;
+}
+[data-theme="fresh"].dark .bg-blue-500\/10 {
+  background-color: rgb(74, 222, 128, 0.1) !important;
+}
+[data-theme="fresh"].dark .bg-blue-500 {
+  background-color: rgb(74, 222, 128) !important;
+}
+[data-theme="fresh"].dark .hover\:fill-blue-500:hover {
+  fill: rgb(74, 222, 128) !important;
+}
+[data-theme="fresh"].dark .border-blue-500\/30 {
+  border-color: rgb(74, 222, 128, 0.3) !important;
+}
+[data-theme="fresh"].dark .hover\:text-blue-400:hover {
+  color: rgb(74, 222, 128) !important;
+}
+[data-theme="fresh"].dark .bg-blue-900\/40 {
+  background-color: rgb(22, 101, 52, 0.4) !important;
+}
+[data-theme="fresh"].dark .hover\:bg-blue-900\/60:hover {
+  background-color: rgb(22, 101, 52, 0.6) !important;
+}
+/* 注意：移除了 .text-blue-200 的通用覆盖 */
+[data-theme="fresh"].dark .border-blue-200 {
+  border-color: rgb(22, 101, 52) !important;
+}
+[data-theme="fresh"].dark .border-blue-300 {
+  border-color: rgb(22, 163, 74) !important;
+}
+[data-theme="fresh"].dark .border-blue-500 {
+  border-color: rgb(74, 222, 128) !important;
+}
+[data-theme="fresh"].dark .bg-blue-600 {
+  background-color: rgb(74, 222, 128) !important;
+}
+[data-theme="fresh"].dark .hover\:bg-blue-600:hover {
+  background-color: rgb(134, 239, 172) !important;
+}
+[data-theme="fresh"].dark .hover\:bg-blue-700:hover {
+  background-color: rgb(134, 239, 172) !important;
+}
+[data-theme="fresh"].dark .focus\:ring-blue-500:focus {
+  box-shadow: 0 0 0 3px rgb(74, 222, 128, 0.1) !important;
+}
+/* 深色模式版本面板和品牌元素适配 */
+[data-theme="fresh"].dark .bg-blue-900\/30 {
+  background-color: rgb(22, 101, 52, 0.3) !important;
+}
+[data-theme="fresh"].dark .text-blue-300 {
+  color: rgb(134, 239, 172) !important;
+}
+[data-theme="fresh"].dark .text-blue-400 {
+  color: rgb(74, 222, 128) !important;
+}
+[data-theme="fresh"].dark .text-blue-500 {
+  color: rgb(74, 222, 128) !important;
+}
+/* 深色模式登录页面适配 */
+[data-theme="fresh"].dark .bg-blue-600 {
+  background-color: rgb(34, 197, 94) !important;
+}
+[data-theme="fresh"].dark .bg-blue-900\/20 {
+  background-color: rgb(20, 83, 45, 0.2) !important;
+}
+[data-theme="fresh"].dark .border-blue-800 {
+  border-color: rgb(22, 101, 52) !important;
+}
+[data-theme="fresh"].dark .peer-focus\:dark\:text-blue-400:focus {
+  color: rgb(74, 222, 128) !important;
+}
+[data-theme="fresh"].dark .peer:focus ~ .peer-focus\:dark\:text-blue-400 {
+  color: rgb(74, 222, 128) !important;
+}
+[data-theme="fresh"].dark .text-blue-200 {
+  color: rgb(134, 239, 172) !important;
+}
+[data-theme="fresh"].dark .bg-blue-800\/40 {
+  background-color: rgb(22, 101, 52, 0.4) !important;
+}
+
+/* 极简主题额外覆盖 */
+[data-theme="minimal"] .bg-blue-50 {
+  background-color: rgb(250, 250, 250) !important;
+}
+[data-theme="minimal"] .hover\\:bg-blue-50:hover {
+  background-color: rgb(250, 250, 250) !important;
+}
+[data-theme="minimal"] .text-blue-500 {
+  color: rgb(115, 115, 115) !important;
+}
+/* 极简主题登录页面适配 */
+[data-theme="minimal"] .bg-blue-600 {
+  background-color: rgb(82, 82, 82) !important;
+}
+[data-theme="minimal"] .focus\:ring-blue-500:focus {
+  --tw-ring-color: rgb(115, 115, 115) !important;
+}
+[data-theme="minimal"] .bg-blue-50 {
+  background-color: rgb(250, 250, 250) !important;
+}
+[data-theme="minimal"] .border-blue-200 {
+  border-color: rgb(229, 229, 229) !important;
+}
+[data-theme="minimal"] .peer-focus\:text-blue-600:focus {
+  color: rgb(82, 82, 82) !important;
+}
+[data-theme="minimal"] .peer:focus ~ .peer-focus\:text-blue-600 {
+  color: rgb(82, 82, 82) !important;
+}
+[data-theme="minimal"] .hover\\:text-blue-500:hover {
+  color: rgb(115, 115, 115) !important;
+}
+
+[data-theme="minimal"].dark .bg-blue-50 {
+  background-color: rgb(28, 28, 28) !important;
+}
+[data-theme="minimal"].dark .hover\\:bg-blue-50:hover {
+  background-color: rgb(28, 28, 28) !important;
+}
+[data-theme="minimal"].dark .text-blue-500 {
+  color: rgb(163, 163, 163) !important;
+}
+/* 极简主题深色模式登录页面适配 */
+[data-theme="minimal"].dark .bg-blue-600 {
+  background-color: rgb(115, 115, 115) !important;
+}
+[data-theme="minimal"].dark .bg-blue-900\/20 {
+  background-color: rgb(64, 64, 64, 0.2) !important;
+}
+[data-theme="minimal"].dark .border-blue-800 {
+  border-color: rgb(82, 82, 82) !important;
+}
+[data-theme="minimal"].dark .peer-focus\:dark\:text-blue-400:focus {
+  color: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"].dark .peer:focus ~ .peer-focus\:dark\:text-blue-400 {
+  color: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"].dark .hover\\:text-blue-500:hover {
+  color: rgb(163, 163, 163) !important;
+}
+
+/* 暖色主题额外覆盖 */
+[data-theme="warm"] .bg-blue-50 {
+  background-color: rgb(255, 247, 237) !important;
+}
+[data-theme="warm"] .hover\\:bg-blue-50:hover {
+  background-color: rgb(255, 247, 237) !important;
+}
+[data-theme="warm"] .text-blue-500 {
+  color: rgb(249, 115, 22) !important;
+}
+[data-theme="warm"] .hover\\:text-blue-500:hover {
+  color: rgb(249, 115, 22) !important;
+}
+
+[data-theme="warm"].dark .bg-blue-50 {
+  background-color: rgb(41, 37, 36) !important;
+}
+[data-theme="warm"].dark .hover\\:bg-blue-50:hover {
+  background-color: rgb(41, 37, 36) !important;
+}
+[data-theme="warm"].dark .text-blue-500 {
+  color: rgb(251, 146, 60) !important;
+}
+/* 暖色主题深色模式登录页面适配 */
+[data-theme="warm"].dark .bg-blue-600 {
+  background-color: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .bg-blue-900\/20 {
+  background-color: rgb(154, 52, 18, 0.2) !important;
+}
+[data-theme="warm"].dark .border-blue-800 {
+  border-color: rgb(194, 65, 12) !important;
+}
+[data-theme="warm"].dark .peer-focus\:dark\:text-blue-400:focus {
+  color: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .peer:focus ~ .peer-focus\:dark\:text-blue-400 {
+  color: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .hover\\:text-blue-500:hover {
+  color: rgb(251, 146, 60) !important;
+}
+
+/* 清新主题额外覆盖 */
+[data-theme="fresh"] .bg-blue-50 {
+  background-color: rgb(240, 253, 244) !important;
+}
+[data-theme="fresh"] .hover\\:bg-blue-50:hover {
+  background-color: rgb(240, 253, 244) !important;
+}
+/* 保留hover状态的覆盖 */
+[data-theme="fresh"] .hover\\:text-blue-500:hover {
+  color: rgb(63, 204, 113) !important;
+}
+
+[data-theme="fresh"].dark .bg-blue-50 {
+  background-color: rgb(31, 41, 35) !important;
+}
+[data-theme="fresh"].dark .hover\\:bg-blue-50:hover {
+  background-color: rgb(31, 41, 35) !important;
+}
+/* 保留hover状态的覆盖 */
+[data-theme="fresh"].dark .hover\\:text-blue-500:hover {
+  color: rgb(74, 222, 128) !important;
+}
+
+/* VideoCard 和其他组件的蓝色样式覆盖 */
+
+/* 极简主题组件样式覆盖 */
+[data-theme="minimal"] .border-blue-200 {
+  border-color: rgb(229, 229, 229) !important;
+}
+[data-theme="minimal"] .text-blue-300 {
+  color: rgb(163, 163, 163) !important;
+}
+
+[data-theme="minimal"].dark .bg-blue-900\/20 {
+  background-color: rgb(23, 23, 23, 0.2) !important;
+}
+[data-theme="minimal"].dark .border-blue-800 {
+  border-color: rgb(38, 38, 38) !important;
+}
+[data-theme="minimal"].dark .bg-blue-900\/30 {
+  background-color: rgb(23, 23, 23, 0.3) !important;
+}
+
+/* 暖色主题组件样式覆盖 */
+[data-theme="warm"] .border-blue-200 {
+  border-color: rgb(253, 230, 138) !important;
+}
+[data-theme="warm"] .peer-focus\:text-blue-600:focus {
+  color: rgb(234, 88, 12) !important;
+}
+[data-theme="warm"] .peer:focus ~ .peer-focus\:text-blue-600 {
+  color: rgb(234, 88, 12) !important;
+}
+[data-theme="warm"] .text-blue-300 {
+  color: rgb(251, 146, 60) !important;
+}
+
+[data-theme="warm"].dark .bg-blue-900\/20 {
+  background-color: rgb(124, 45, 18, 0.2) !important;
+}
+[data-theme="warm"].dark .border-blue-800 {
+  border-color: rgb(154, 52, 18) !important;
+}
+[data-theme="warm"].dark .bg-blue-900\/30 {
+  background-color: rgb(124, 45, 18, 0.3) !important;
+}
+
+/* 补充更多蓝色元素覆盖 */
+
+/* 极简主题补充覆盖 */
+[data-theme="minimal"] .text-blue-900 {
+  color: rgb(23, 23, 23) !important;
+}
+[data-theme="minimal"] .bg-blue-200 {
+  background-color: rgb(229, 229, 229) !important;
+}
+[data-theme="minimal"] .bg-blue-300 {
+  background-color: rgb(212, 212, 212) !important;
+}
+[data-theme="minimal"] .bg-blue-600 {
+  background-color: rgb(82, 82, 82) !important;
+}
+[data-theme="minimal"] .bg-blue-700 {
+  background-color: rgb(64, 64, 64) !important;
+}
+[data-theme="minimal"] .border-blue-100 {
+  border-color: rgb(245, 245, 245) !important;
+}
+[data-theme="minimal"] .border-blue-300 {
+  border-color: rgb(212, 212, 212) !important;
+}
+[data-theme="minimal"] .border-blue-500 {
+  border-color: rgb(115, 115, 115) !important;
+}
+[data-theme="minimal"] .hover\\:border-blue-300:hover {
+  border-color: rgb(212, 212, 212) !important;
+}
+[data-theme="minimal"] .hover\\:bg-blue-700:hover {
+  background-color: rgb(64, 64, 64) !important;
+}
+[data-theme="minimal"] .focus\\:ring-blue-500:focus {
+  box-shadow: 0 0 0 3px rgb(115, 115, 115, 0.1) !important;
+}
+
+[data-theme="minimal"].dark .text-blue-900 {
+  color: rgb(250, 250, 250) !important;
+}
+[data-theme="minimal"].dark .bg-blue-200 {
+  background-color: rgb(64, 64, 64) !important;
+}
+[data-theme="minimal"].dark .bg-blue-300 {
+  background-color: rgb(82, 82, 82) !important;
+}
+[data-theme="minimal"].dark .bg-blue-600 {
+  background-color: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"].dark .bg-blue-700 {
+  background-color: rgb(212, 212, 212) !important;
+}
+[data-theme="minimal"].dark .border-blue-100 {
+  border-color: rgb(38, 38, 38) !important;
+}
+[data-theme="minimal"].dark .border-blue-300 {
+  border-color: rgb(82, 82, 82) !important;
+}
+[data-theme="minimal"].dark .border-blue-500 {
+  border-color: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"].dark .hover\\:border-blue-300:hover {
+  border-color: rgb(82, 82, 82) !important;
+}
+[data-theme="minimal"].dark .hover\\:bg-blue-700:hover {
+  background-color: rgb(212, 212, 212) !important;
+}
+[data-theme="minimal"].dark .focus\\:ring-blue-500:focus {
+  box-shadow: 0 0 0 3px rgb(163, 163, 163, 0.1) !important;
+}
+
+/* 暖色主题补充覆盖 */
+[data-theme="warm"] .text-blue-900 {
+  color: rgb(124, 45, 18) !important;
+}
+[data-theme="warm"] .bg-blue-200 {
+  background-color: rgb(254, 215, 170) !important;
+}
+[data-theme="warm"] .bg-blue-300 {
+  background-color: rgb(253, 186, 116) !important;
+}
+[data-theme="warm"] .bg-blue-600 {
+  background-color: rgb(234, 88, 12) !important;
+}
+[data-theme="warm"] .bg-blue-700 {
+  background-color: rgb(194, 65, 12) !important;
+}
+[data-theme="warm"] .border-blue-100 {
+  border-color: rgb(255, 237, 213) !important;
+}
+[data-theme="warm"] .border-blue-300 {
+  border-color: rgb(253, 186, 116) !important;
+}
+[data-theme="warm"] .border-blue-500 {
+  border-color: rgb(249, 115, 22) !important;
+}
+[data-theme="warm"] .hover\\:border-blue-300:hover {
+  border-color: rgb(253, 186, 116) !important;
+}
+[data-theme="warm"] .hover\\:bg-blue-700:hover {
+  background-color: rgb(194, 65, 12) !important;
+}
+[data-theme="warm"] .focus\\:ring-blue-500:focus {
+  box-shadow: 0 0 0 3px rgb(249, 115, 22, 0.1) !important;
+}
+
+[data-theme="warm"].dark .text-blue-900 {
+  color: rgb(254, 243, 199) !important;
+}
+[data-theme="warm"].dark .bg-blue-200 {
+  background-color: rgb(154, 52, 18) !important;
+}
+[data-theme="warm"].dark .bg-blue-300 {
+  background-color: rgb(194, 65, 12) !important;
+}
+[data-theme="warm"].dark .bg-blue-600 {
+  background-color: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .bg-blue-700 {
+  background-color: rgb(253, 186, 116) !important;
+}
+[data-theme="warm"].dark .border-blue-100 {
+  border-color: rgb(87, 83, 78) !important;
+}
+[data-theme="warm"].dark .border-blue-300 {
+  border-color: rgb(194, 65, 12) !important;
+}
+[data-theme="warm"].dark .border-blue-500 {
+  border-color: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .hover\\:border-blue-300:hover {
+  border-color: rgb(194, 65, 12) !important;
+}
+[data-theme="warm"].dark .hover\\:bg-blue-700:hover {
+  background-color: rgb(253, 186, 116) !important;
+}
+[data-theme="warm"].dark .focus\\:ring-blue-500:focus {
+  box-shadow: 0 0 0 3px rgb(251, 146, 60, 0.1) !important;
+}
+
+/* 导航组件蓝色元素覆盖 - 直接覆盖具体元素，避免复杂选择器 */
+
+/* 极简主题导航覆盖 */
+/* 选中状态背景和文字颜色 */
+[data-theme="minimal"] *[data-active="true"] {
+  background-color: rgb(82, 82, 82, 0.2) !important;
+  color: rgb(64, 64, 64) !important;
+}
+[data-theme="minimal"] .group[data-active="true"] svg {
+  color: rgb(64, 64, 64) !important;
+}
+
+[data-theme="minimal"].dark *[data-active="true"] {
+  background-color: rgb(163, 163, 163, 0.1) !important;
+  color: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"].dark .group[data-active="true"] svg {
+  color: rgb(163, 163, 163) !important;
+}
+
+/* hover状态文字颜色 */
+[data-theme="minimal"] .hover\\:text-blue-300:hover {
+  color: rgb(115, 115, 115) !important;
+}
+[data-theme="minimal"].dark .dark\\:hover\\:text-blue-300:hover {
+  color: rgb(163, 163, 163) !important;
+}
+
+/* 暖色主题导航覆盖 */
+[data-theme="warm"] *[data-active="true"] {
+  background-color: rgb(234, 88, 12, 0.2) !important;
+  color: rgb(194, 65, 12) !important;
+}
+[data-theme="warm"] .group[data-active="true"] svg {
+  color: rgb(194, 65, 12) !important;
+}
+
+[data-theme="warm"].dark *[data-active="true"] {
+  background-color: rgb(251, 146, 60, 0.1) !important;
+  color: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .group[data-active="true"] svg {
+  color: rgb(251, 146, 60) !important;
+}
+
+[data-theme="warm"] .hover\\:text-blue-300:hover {
+  color: rgb(234, 88, 12) !important;
+}
+[data-theme="warm"].dark .dark\\:hover\\:text-blue-300:hover {
+  color: rgb(251, 146, 60) !important;
+}
+
+/* 清新主题侧边栏hover颜色适配 */
+[data-theme="fresh"] .hover\:text-blue-600:hover {
+  color: rgb(22, 163, 74) !important;
+}
+[data-theme="fresh"] .hover\:text-blue-700:hover {
+  color: rgb(21, 128, 61) !important;
+}
+[data-theme="fresh"] .group-hover\:text-blue-600:hover,
+[data-theme="fresh"] .group:hover .group-hover\:text-blue-600 {
+  color: rgb(22, 163, 74) !important;
+}
+[data-theme="fresh"] .group-data-\[active\=true\]\:text-blue-700,
+[data-theme="fresh"] .group[data-active="true"] .group-data-\[active\=true\]\:text-blue-700 {
+  color: rgb(21, 128, 61) !important;
+}
+[data-theme="fresh"] .data-\[active\=true\]\:text-blue-700[data-active="true"] {
+  color: rgb(21, 128, 61) !important;
+}
+[data-theme="fresh"] .data-\[active\=true\]\:bg-blue-500\20[data-active="true"] {
+  background-color: rgb(63, 204, 113, 0.2) !important;
+}
+
+[data-theme="fresh"].dark .hover\:text-blue-400:hover {
+  color: rgb(74, 222, 128) !important;
+}
+[data-theme="fresh"].dark .hover\:text-blue-300:hover {
+  color: rgb(74, 222, 128) !important;
+}
+[data-theme="fresh"].dark .group-hover\:text-blue-400:hover,
+[data-theme="fresh"].dark .group:hover .group-hover\:text-blue-400 {
+  color: rgb(74, 222, 128) !important;
+}
+[data-theme="fresh"].dark .group-data-\[active\=true\]\:text-blue-400,
+[data-theme="fresh"].dark .group[data-active="true"] .group-data-\[active\=true\]\:text-blue-400 {
+  color: rgb(74, 222, 128) !important;
+}
+[data-theme="fresh"].dark .data-\[active\=true\]\:text-blue-400[data-active="true"] {
+  color: rgb(74, 222, 128) !important;
+}
+[data-theme="fresh"].dark .data-\[active\=true\]\:bg-blue-500\10[data-active="true"] {
+  background-color: rgb(74, 222, 128, 0.1) !important;
+}
+[data-theme="fresh"].dark .dark\\:hover\\:text-blue-300:hover {
+  color: rgb(74, 222, 128) !important;
+}
+
+/* 清新主题导航覆盖 */
+/* 选中状态背景和文字颜色 */
+[data-theme="fresh"] *[data-active="true"] {
+  background-color: rgb(63, 204, 113, 0.2) !important;
+  color: rgb(21, 128, 61) !important;
+}
+
+[data-theme="fresh"].dark *[data-active="true"] {
+  background-color: rgb(74, 222, 128, 0.1) !important;
+  color: rgb(74, 222, 128) !important;
+}
+
+/* 视频卡片播放按钮和标签元素覆盖 */
+
+/* 极简主题视频卡片覆盖 */
+[data-theme="minimal"] .fill-blue-500,
+[data-theme="minimal"] .hover\\:fill-blue-500:hover {
+  fill: rgb(82, 82, 82) !important;
+}
+[data-theme="minimal"] .bg-blue-400 {
+  background-color: rgb(115, 115, 115) !important;
+}
+[data-theme="minimal"] .hover\\:bg-blue-600:hover {
+  background-color: rgb(64, 64, 64) !important;
+}
+
+[data-theme="minimal"].dark .fill-blue-500,
+[data-theme="minimal"].dark .hover\\:fill-blue-500:hover {
+  fill: rgb(163, 163, 163) !important;
+}
+[data-theme="minimal"].dark .hover\\:bg-blue-600:hover {
+  background-color: rgb(212, 212, 212) !important;
+}
+
+/* 暖色主题视频卡片覆盖 */
+[data-theme="warm"] .fill-blue-500,
+[data-theme="warm"] .hover\\:fill-blue-500:hover {
+  fill: rgb(234, 88, 12) !important;
+}
+[data-theme="warm"] .bg-blue-400 {
+  background-color: rgb(249, 115, 22) !important;
+}
+[data-theme="warm"] .hover\\:bg-blue-600:hover {
+  background-color: rgb(194, 65, 12) !important;
+}
+
+[data-theme="warm"].dark .fill-blue-500,
+[data-theme="warm"].dark .hover\\:fill-blue-500:hover {
+  fill: rgb(251, 146, 60) !important;
+}
+[data-theme="warm"].dark .hover\\:bg-blue-600:hover {
+  background-color: rgb(253, 186, 116) !important;
+}
+
+/* 清新主题视频卡片覆盖 */
+[data-theme="fresh"] .hover\\:fill-blue-500:hover {
+  fill: rgb(63, 204, 113) !important;
+}
+[data-theme="fresh"] .bg-blue-400 {
+  background-color: rgb(74, 222, 128) !important;
+}
+[data-theme="fresh"] .hover\\:bg-blue-600:hover {
+  background-color: rgb(21, 128, 61) !important;
+}
+
+[data-theme="fresh"].dark .hover\\:fill-blue-500:hover {
+  fill: rgb(74, 222, 128) !important;
+}
+[data-theme="fresh"].dark .hover\\:bg-blue-600:hover {
+  background-color: rgb(134, 239, 172) !important;
 }
 
 html,
@@ -61,6 +1349,73 @@ html:not(.dark) body {
     #d3dde6 100%
   );
   background-attachment: fixed;
+}
+
+/* 主题背景渐变覆盖 */
+[data-theme="minimal"]:not(.dark) body {
+  background: linear-gradient(
+    180deg,
+    #fafafa 0%,
+    #f5f5f5 25%,
+    #f0f0f0 50%,
+    #ebebeb 75%,
+    #e5e5e5 100%
+  );
+  background-attachment: fixed;
+}
+
+[data-theme="warm"]:not(.dark) body {
+  background: linear-gradient(
+    180deg,
+    #fffdf7 0%,
+    #fefaf0 25%,
+    #fef7e0 50%,
+    #fef3c7 75%,
+    #fde68a 100%
+  );
+  background-attachment: fixed;
+}
+
+[data-theme="fresh"]:not(.dark) body {
+  background: linear-gradient(
+    180deg,
+    #f7fdf9 0%,
+    #f0fdf4 25%,
+    #ecfdf5 50%,
+    #d1fae5 75%,
+    #a7f3d0 100%
+  );
+  background-attachment: fixed;
+}
+
+.dark body {
+  background: linear-gradient(
+    180deg,
+    rgb(var(--color-theme-bg)) 0%,
+    rgb(var(--color-theme-surface)) 100%
+  );
+  background-attachment: fixed;
+}
+
+/* 通用主题类 */
+.theme-transition {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.theme-card {
+  @apply bg-theme-surface border border-theme-border rounded-lg shadow-sm theme-transition;
+}
+
+.theme-button {
+  @apply bg-theme-accent text-white border border-theme-accent rounded-lg px-4 py-2 hover:opacity-90 theme-transition;
+}
+
+.theme-button-secondary {
+  @apply bg-theme-surface text-theme-text border border-theme-border rounded-lg px-4 py-2 hover:bg-theme-accent/10 theme-transition;
+}
+
+.theme-input {
+  @apply bg-theme-surface text-theme-text border border-theme-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-theme-accent/50 theme-transition;
 }
 
 /* 自定义滚动条样式 */
@@ -166,6 +1521,27 @@ html.dark::view-transition-new(root) {
 /* 从深色到浅色：新内容（浅色）从底部滑入 */
 html:not(.dark)::view-transition-new(root) {
   animation-name: slide-from-bottom;
+}
+
+/* 确保自定义主题色类在所有主题下正确显示 */
+.bg-theme-accent {
+  background-color: rgb(var(--color-theme-accent)) !important;
+}
+
+.text-theme-accent {
+  color: rgb(var(--color-theme-accent)) !important;
+}
+
+.border-theme-accent {
+  border-color: rgb(var(--color-theme-accent)) !important;
+}
+
+.hover\:bg-theme-accent\/5:hover {
+  background-color: rgb(var(--color-theme-accent), 0.05) !important;
+}
+
+.hover\:bg-theme-accent\/10:hover {
+  background-color: rgb(var(--color-theme-accent), 0.1) !important;
 }
 
 /* 强制播放器内部的 video 元素高度为 100%，并保持内容完整显示 */

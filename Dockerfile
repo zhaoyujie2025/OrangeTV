@@ -89,6 +89,43 @@ RUN corepack enable && corepack prepare pnpm@latest --activate && \
     # 清理安装缓存减小镜像大小
     pnpm store prune
 
+# 创建健康检查脚本（在切换用户之前以root权限创建）
+RUN echo '#!/usr/bin/env node\n\
+const http = require("http");\n\
+const options = {\n\
+  hostname: "localhost",\n\
+  port: 3000,\n\
+  path: "/api/health",\n\
+  method: "GET",\n\
+  timeout: 5000\n\
+};\n\
+\n\
+const req = http.request(options, (res) => {\n\
+  if (res.statusCode === 200) {\n\
+    console.log("Health check passed");\n\
+    process.exit(0);\n\
+  } else {\n\
+    console.log(`Health check failed with status: ${res.statusCode}`);\n\
+    process.exit(1);\n\
+  }\n\
+});\n\
+\n\
+req.on("error", (err) => {\n\
+  console.log(`Health check error: ${err.message}`);\n\
+  process.exit(1);\n\
+});\n\
+\n\
+req.on("timeout", () => {\n\
+  console.log("Health check timeout");\n\
+  req.destroy();\n\
+  process.exit(1);\n\
+});\n\
+\n\
+req.setTimeout(5000);\n\
+req.end();' > /app/healthcheck.js && \
+    chmod +x /app/healthcheck.js && \
+    chown nextjs:nodejs /app/healthcheck.js
+
 # 切回非特权用户
 USER nextjs
 
@@ -97,7 +134,7 @@ EXPOSE 3000 3001
 
 # 添加健康检查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:3000/api/health || exit 1
+  CMD node /app/healthcheck.js
 
 # 设置WebSocket端口环境变量
 ENV WS_PORT=3001

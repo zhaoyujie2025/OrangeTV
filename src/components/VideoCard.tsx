@@ -228,6 +228,11 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   );
 
   const handleClick = useCallback(() => {
+    // 如果从搜索页面点击，设置标记以便返回时使用缓存
+    if (from === 'search' && typeof window !== 'undefined') {
+      sessionStorage.setItem('fromPlayPage', 'true');
+    }
+
     if (origin === 'live' && actualSource && actualId) {
       // 直播内容跳转到直播页面
       const url = `/live?source=${actualSource.replace('live_', '')}&id=${actualId.replace('live_', '')}`;
@@ -270,6 +275,11 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
 
   // 新标签页播放处理函数
   const handlePlayInNewTab = useCallback(() => {
+    // 如果从搜索页面点击，设置标记以便返回时使用缓存
+    if (from === 'search' && typeof window !== 'undefined') {
+      sessionStorage.setItem('fromPlayPage', 'true');
+    }
+
     if (origin === 'live' && actualSource && actualId) {
       // 直播内容跳转到直播页面
       const url = `/live?source=${actualSource.replace('live_', '')}&id=${actualId.replace('live_', '')}`;

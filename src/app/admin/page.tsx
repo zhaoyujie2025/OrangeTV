@@ -38,7 +38,7 @@ import {
   Users,
   Video,
 } from 'lucide-react';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, Palette } from 'lucide-react';
 import Image from 'next/image';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -47,6 +47,7 @@ import { AdminConfig, AdminConfigResult } from '../../lib/admin.types';
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 
 import DataMigration from '@/components/DataMigration';
+import ThemeManager from '@/components/ThemeManager';
 import PageLayout from '@/components/PageLayout';
 
 // 统一按钮样式系统
@@ -2509,7 +2510,7 @@ const VideoSourceConfig = ({
   // 有效性检测函数
   const handleValidateSources = async () => {
     if (!searchKeyword.trim()) {
-      showAlert({ type: 'warning', title: '请输入搜索关键词', message: '搜索关键词不能为空' });
+      showAlert({ type: 'warning', title: '请输入搜索关键词', message: '搜索关键词不能为空', showConfirm: true });
       return;
     }
 
@@ -2583,7 +2584,7 @@ const VideoSourceConfig = ({
           console.error('EventSource错误:', error);
           eventSource.close();
           setIsValidating(false);
-          showAlert({ type: 'error', title: '验证失败', message: '连接错误，请重试' });
+          showAlert({ type: 'error', title: '验证失败', message: '连接错误，请重试', showConfirm: true });
         };
 
         // 设置超时，防止长时间等待
@@ -2591,13 +2592,13 @@ const VideoSourceConfig = ({
           if (eventSource.readyState === EventSource.OPEN) {
             eventSource.close();
             setIsValidating(false);
-            showAlert({ type: 'warning', title: '验证超时', message: '检测超时，请重试' });
+            showAlert({ type: 'warning', title: '验证超时', message: '检测超时，请重试', showConfirm: true });
           }
         }, 60000); // 60秒超时
 
       } catch (error) {
         setIsValidating(false);
-        showAlert({ type: 'error', title: '验证失败', message: error instanceof Error ? error.message : '未知错误' });
+        showAlert({ type: 'error', title: '验证失败', message: error instanceof Error ? error.message : '未知错误', showConfirm: true });
         throw error;
       }
     });
@@ -2610,7 +2611,7 @@ const VideoSourceConfig = ({
     isNewSource: boolean = false
   ) => {
     if (!api.trim()) {
-      showAlert({ type: 'warning', title: 'API地址不能为空', message: '请输入有效的API地址' });
+      showAlert({ type: 'warning', title: 'API地址不能为空', message: '请输入有效的API地址', showConfirm: true });
       return;
     }
 
@@ -2731,7 +2732,7 @@ const VideoSourceConfig = ({
   // 单个视频源有效性检测函数
   const handleValidateSingleSource = async () => {
     if (!editingSource) {
-      showAlert({ type: 'warning', title: '没有可检测的视频源', message: '请确保正在编辑视频源' });
+      showAlert({ type: 'warning', title: '没有可检测的视频源', message: '请确保正在编辑视频源', showConfirm: true });
       return;
     }
     await handleValidateSource(editingSource.api, editingSource.name, false);
@@ -2740,7 +2741,7 @@ const VideoSourceConfig = ({
   // 新增视频源有效性检测函数
   const handleValidateNewSource = async () => {
     if (!newSource.name.trim()) {
-      showAlert({ type: 'warning', title: '视频源名称不能为空', message: '请输入视频源名称' });
+      showAlert({ type: 'warning', title: '视频源名称不能为空', message: '请输入视频源名称', showConfirm: true });
       return;
     }
     await handleValidateSource(newSource.api, newSource.name, true);
@@ -2925,7 +2926,7 @@ const VideoSourceConfig = ({
   // 批量操作
   const handleBatchOperation = async (action: 'batch_enable' | 'batch_disable' | 'batch_delete') => {
     if (selectedSources.size === 0) {
-      showAlert({ type: 'warning', title: '请先选择要操作的视频源', message: '请选择至少一个视频源' });
+      showAlert({ type: 'warning', title: '请先选择要操作的视频源', message: '请选择至少一个视频源', showConfirm: true });
       return;
     }
 
@@ -2960,7 +2961,7 @@ const VideoSourceConfig = ({
           // 重置选择状态
           setSelectedSources(new Set());
         } catch (err) {
-          showAlert({ type: 'error', title: `${actionName}失败`, message: err instanceof Error ? err.message : '操作失败' });
+          showAlert({ type: 'error', title: `${actionName}失败`, message: err instanceof Error ? err.message : '操作失败', showConfirm: true });
         }
         setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: () => { }, onCancel: () => { } });
       },
@@ -5210,6 +5211,7 @@ function AdminPageClient() {
     categoryConfig: false,
     configFile: false,
     dataMigration: false,
+    themeManager: false,
   });
 
   // 机器码管理状态
@@ -5447,6 +5449,21 @@ function AdminPageClient() {
                 <DataMigration onRefreshConfig={fetchConfig} />
               </CollapsibleTab>
             )}
+
+            {/* 主题定制标签 */}
+            <CollapsibleTab
+              title='主题定制'
+              icon={
+                <Palette
+                  size={20}
+                  className='text-gray-600 dark:text-gray-400'
+                />
+              }
+              isExpanded={expandedTabs.themeManager}
+              onToggle={() => toggleTab('themeManager')}
+            >
+              <ThemeManager showAlert={showAlert} role={role} />
+            </CollapsibleTab>
           </div>
         </div>
       </div>

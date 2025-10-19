@@ -176,6 +176,7 @@ const DataMigration = ({ onRefreshConfig }: DataMigrationProps) => {
         type: 'error',
         title: '错误',
         message: '请输入加密密码',
+        showConfirm: true
       });
       return;
     }
@@ -231,6 +232,7 @@ const DataMigration = ({ onRefreshConfig }: DataMigrationProps) => {
         type: 'error',
         title: '导出失败',
         message: error instanceof Error ? error.message : '导出过程中发生错误',
+        showConfirm: true,
       });
     } finally {
       setIsExporting(false);
@@ -252,6 +254,7 @@ const DataMigration = ({ onRefreshConfig }: DataMigrationProps) => {
         type: 'error',
         title: '错误',
         message: '请选择备份文件',
+        showConfirm: true
       });
       return;
     }
@@ -261,6 +264,7 @@ const DataMigration = ({ onRefreshConfig }: DataMigrationProps) => {
         type: 'error',
         title: '错误',
         message: '请输入解密密码',
+        showConfirm: true
       });
       return;
     }
@@ -319,6 +323,7 @@ const DataMigration = ({ onRefreshConfig }: DataMigrationProps) => {
         type: 'error',
         title: '导入失败',
         message: error instanceof Error ? error.message : '导入过程中发生错误',
+        showConfirm: true
       });
     } finally {
       setIsImporting(false);
